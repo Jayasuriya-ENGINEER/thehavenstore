@@ -67,11 +67,13 @@ export default function Contact() {
 
           <div className="contact-map">
             <iframe
-              src={mapEmbedUrl}
-              title="Our location on map"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3499.9972389231557!2d77.4910661!3d28.689729200000002!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390cf18d28286e85%3A0x4ebba7d0741b49a0!2sThe%20Haven%20Store!5e0!3m2!1sen!2sin!4v1782636970927!5m2!1sen!2sin"
+              width="600"
+              height="450"
+              style="border:0;"
+              allowfullscreen=""
               loading="lazy"
-              allowFullScreen
-              referrerPolicy="no-referrer-when-downgrade"
+              referrerpolicy="strict-origin-when-cross-origin"
             ></iframe>
             <a
               href={mapOpenUrl}
