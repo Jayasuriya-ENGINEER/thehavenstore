@@ -437,129 +437,311 @@ section { padding: 100px 0; }
 .file-upload-label span { font-weight: 500; color: var(--color-dark-grey); }
 .file-upload-label small { color: #999; font-size: 0.85rem; }
 
-/* ============================================ 
-   Testimonials - Infinite Scrolling Marquee 
-   ============================================ */
+/* ==========================================
+   TESTIMONIALS
+========================================== */
+
 .testimonials {
-  background-color: var(--color-white);
-  overflow: hidden; /* Prevents container layout breaks */
+  background: #fafafa;
+  padding: 120px 0;
+  overflow: hidden;
+}
+
+.section-description {
+  max-width: 650px;
+  margin: 18px auto 0;
+  color: #6b7280;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.google-rating {
+  margin-top: 28px;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 22px;
+  border-radius: 999px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 8px 25px rgba(0,0,0,.06);
+}
+
+.google-rating span {
+  font-size: 1rem;
+}
+
+.google-rating strong {
+  font-size: 1rem;
+}
+
+.google-rating small {
+  color: #6b7280;
 }
 
 .marquee-container {
+  margin-top: 70px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  width: 100%;
-  padding: 20px 0;
+  gap: 28px;
 }
 
 .marquee-row {
-  display: flex;
-  width: 100%;
   overflow: hidden;
-  /* Creates a smooth fade out on the edges */
-  mask-image: linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
-  -webkit-mask-image: linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
+  position: relative;
+}
+
+.marquee-row::before,
+.marquee-row::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 120px;
+  height: 100%;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.marquee-row::before {
+  left: 0;
+  background: linear-gradient(to right,#fafafa,transparent);
+}
+
+.marquee-row::after {
+  right: 0;
+  background: linear-gradient(to left,#fafafa,transparent);
 }
 
 .marquee-track {
   display: flex;
-  gap: 24px;
+  gap: 26px;
   width: max-content;
 }
 
-/* Row 1 Animation: Right to Left */
 .track-left {
-  animation: scrollLeft 30s linear infinite;
+  animation: marqueeLeft 42s linear infinite;
 }
 
-/* Row 2 Animation: Left to Right */
 .track-right {
-  animation: scrollRight 30s linear infinite;
+  animation: marqueeRight 42s linear infinite;
 }
 
-/* Pause animation on hover for user readability */
 .marquee-row:hover .marquee-track {
   animation-play-state: paused;
 }
 
-/* Individual card width adjustments for marquee sizing */
+/* ==========================================
+   CARD
+========================================== */
+
 .testimonial-card {
-  background-color: var(--color-white);
-  padding: 40px 32px;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-grey);
-  transition: var(--transition-base);
-  box-shadow: var(--shadow-sm);
-  width: 400px; /* Fixed width ensures consistent speed */
+  width: 390px;
   flex-shrink: 0;
+
+  background: white;
+
+  border-radius: 22px;
+
+  padding: 32px;
+
+  border: 1px solid #ececec;
+
+  box-shadow:
+    0 15px 45px rgba(0,0,0,.05);
+
+  transition: .35s;
 }
 
 .testimonial-card:hover {
-  transform: translateY(-8px);
-  box-shadow: var(--shadow-lg);
-  border-color: transparent;
+
+  transform:
+      translateY(-8px);
+
+  box-shadow:
+      0 25px 60px rgba(0,0,0,.10);
+
 }
 
-/* Keyframes */
-@keyframes scrollLeft {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-50%); /* Moves exactly half the total width */
-  }
-}
+/* ==========================================
+   STARS
+========================================== */
 
-@keyframes scrollRight {
-  0% {
-    transform: translateX(-50%); /* Starts halfway through */
-  }
-  100% {
-    transform: translateX(0);
-  }
-}
-
-/* Keep your existing .testimonial-rating, .testimonial-text, and .testimonial-author styles below */
 .testimonial-rating {
-  color: #f1c40f;
-  margin-bottom: 20px;
-  font-size: 1rem;
+
+  display:flex;
+
+  gap:4px;
+
+  color:#fbbc04;
+
+  margin-bottom:20px;
+
+  font-size:18px;
+
 }
-.testimonial-rating i {
-  margin-right: 2px;
-}
+
+/* ==========================================
+   REVIEW
+========================================== */
+
 .testimonial-text {
-  font-size: 1rem;
-  color: #555;
-  line-height: 1.7;
-  margin-bottom: 24px;
-  font-style: italic;
+
+  color:#374151;
+
+  font-size:1rem;
+
+  line-height:1.8;
+
+  margin-bottom:28px;
+
+  min-height:110px;
+
+  font-style:italic;
+
 }
-.testimonial-author {
-  display: flex;
-  align-items: center;
-  gap: 16px;
+
+/* ==========================================
+   AUTHOR
+========================================== */
+
+.testimonial-author{
+
+display:flex;
+
+align-items:center;
+
+gap:15px;
+
 }
-.author-avatar {
-  width: 56px;
-  height: 56px;
-  background: linear-gradient(135deg, var(--color-black) 0%, var(--color-dark-grey) 100%);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-white);
-  font-size: 1.5rem;
+
+.author-avatar{
+
+width:58px;
+
+height:58px;
+
+border-radius:50%;
+
+overflow:hidden;
+
+background:#111827;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+color:white;
+
+font-weight:700;
+
+font-size:1.2rem;
+
+flex-shrink:0;
+
 }
-.author-info h4 {
-  font-size: 1.05rem;
-  margin-bottom: 4px;
+
+.author-avatar img{
+
+width:100%;
+
+height:100%;
+
+object-fit:cover;
+
 }
-.author-info p {
-  font-size: 0.9rem;
-  color: #888;
-  margin: 0;
+
+.author-info h4{
+
+margin:0;
+
+font-size:1rem;
+
+font-weight:700;
+
+}
+
+.author-info p{
+
+margin-top:4px;
+
+color:#6b7280;
+
+font-size:.92rem;
+
+}
+
+/* ==========================================
+   ANIMATION
+========================================== */
+
+@keyframes marqueeLeft{
+
+from{
+
+transform:translateX(0);
+
+}
+
+to{
+
+transform:translateX(-50%);
+
+}
+
+}
+
+@keyframes marqueeRight{
+
+from{
+
+transform:translateX(-50%);
+
+}
+
+to{
+
+transform:translateX(0);
+
+}
+
+}
+
+/* ==========================================
+   MOBILE
+========================================== */
+
+@media(max-width:768px){
+
+.testimonials{
+
+padding:90px 0;
+
+}
+
+.google-rating{
+
+flex-wrap:wrap;
+
+justify-content:center;
+
+}
+
+.testimonial-card{
+
+width:310px;
+
+padding:24px;
+
+}
+
+.testimonial-text{
+
+min-height:auto;
+
+}
+
 }
 
 
