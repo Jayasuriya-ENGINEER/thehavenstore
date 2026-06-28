@@ -17,7 +17,7 @@ const socials = [
     href: "https://facebook.com/yourpage",
   },
   {
-    icon: "fab fa-x-twitter",
+    icon: "fab fa-x-twitter-white",
     color: "#ffffff",
     label: "Twitter",
     href: "https://x.com/yourhandle",

@@ -1,7 +1,9 @@
-import pr1 from "../assets/pr1.jpeg";
-import pr2 from "../assets/pr2.jpeg";
-import hoodieImage from "../assets/hoodie.png";
-import sweatshirtImage from "../assets/sweatwear.png";
+import pr1 from "../assets/pr1.png";
+import pr2 from "../assets/pr2.png";
+import pr3 from "../assets/pr3.jpeg";
+import pr5 from "../assets/pr5.jpeg";
+import pr6 from "../assets/pr6.png";
+
 
 
 const projects = [
@@ -12,34 +14,28 @@ const projects = [
     image: pr1,
   },
   {
-    title: "Corporate Team Building",
-    desc: "200+ Polo Shirts",
+    title: "Sports Event Merchandise",
+    desc: "1000+ Sports Jerseys",
     delay: "delay-100",
     image: pr2,
   },
   {
-    title: "Sports Team Jerseys",
-    desc: "150+ Custom Jerseys",
+    title: "Q&A Event",
+    desc: "In partnership with GeeksforGeeks",
     delay: "delay-200",
-    image: pr1,
-  },
-  {
-    title: "Startup Launch Event",
-    desc: "100+ Hoodies",
-    delay: "",
-    image: hoodieImage,
+    image: pr3,
   },
   {
     title: "University Society",
-    desc: "300+ Sweatshirts",
+    desc: "25+ college clubs associated with us",
     delay: "delay-100",
-    image: sweatshirtImage,
+    image: pr5,
   },
   {
     title: "Community Event",
     desc: "250+ Custom Tops",
     delay: "delay-200",
-    image: pr1,
+    image: pr6,
   },
 ];
 

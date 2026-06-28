@@ -1,6 +1,7 @@
 import banner1 from "../assets/banner1.png";
+import logo from "../assets/logo.png";
 
-const LOGO_SVG = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 120'%3E%3Crect x='0' y='20' width='80' height='80' rx='12' fill='%23111111'/%3E%3Ctext x='40' y='72' font-family='Arial' font-weight='bold' font-size='50' fill='white' text-anchor='middle'%3ETH%3C/text%3E%3Ctext x='100' y='72' font-family='Arial' font-weight='bold' font-size='40' fill='%23111111'%3ETHE HAVEN%3C/text%3E%3C/svg%3E`;
+//const LOGO_SVG = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 120'%3E%3Crect x='0' y='20' width='80' height='80' rx='12' fill='%23111111'/%3E%3Ctext x='40' y='72' font-family='Arial' font-weight='bold' font-size='50' fill='white' text-anchor='middle'%3ETH%3C/text%3E%3Ctext x='100' y='72' font-family='Arial' font-weight='bold' font-size='40' fill='%23111111'%3ETHE HAVEN%3C/text%3E%3C/svg%3E`;
 
 export default function Hero() {
   const scrollTo = (href) => {
@@ -22,7 +23,7 @@ export default function Hero() {
       <div className="hero-container">
         <div className="hero-content reveal">
           <div className="hero-logo">
-            <img src={LOGO_SVG} alt="The Haven" />
+            <img src={logo} alt="The Haven" />
           </div>
           <h1 className="hero-title">
             Wear Your <span className="highlight">Identity</span>
@@ -42,7 +43,7 @@ export default function Hero() {
               Get a Quote
             </button>
             <a
-              href="https://wa.me/7502737734"
+              href="https://wa.me/8376907227"
               className="btn btn-secondary"
               target="_blank"
               rel="noreferrer"

@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 
 function Notification({ msg, type, onClose }) {
   if (!msg) return null;
@@ -55,10 +55,9 @@ export default function EnquiryForm() {
     message: "",
   });
   const [errors, setErrors] = useState({});
-  const [fileName, setFileName] = useState("");
-  const [dragOver, setDragOver] = useState(false);
+
   const [notification, setNotification] = useState({ msg: "", type: "" });
-  const fileRef = useRef();
+
 
   const showNotification = (msg, type) => {
     setNotification({ msg, type });
@@ -84,36 +83,49 @@ export default function EnquiryForm() {
     setErrors((prev) => ({ ...prev, [name]: false }));
   };
 
-  const handleFile = (files) => {
-    if (files && files[0]) setFileName(files[0].name);
-  };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const errs = validate();
-    if (Object.keys(errs).length > 0) {
-      setErrors(errs);
-      showNotification(
-        "Please fill in all required fields correctly.",
-        "error",
-      );
-      return;
-    }
-    showNotification(
-      "Thank you for your enquiry! We will get back to you within 24 hours.",
-      "success",
-    );
-    setForm({
-      fullName: "",
-      phone: "",
-      email: "",
-      organization: "",
-      apparelType: "",
-      quantity: "",
-      message: "",
-    });
-    setFileName("");
-  };
+
+ const handleSubmit = (e) => {
+   e.preventDefault();
+
+   const errs = validate();
+
+   if (Object.keys(errs).length > 0) {
+     setErrors(errs);
+     showNotification("Please fill in all required fields correctly.", "error");
+     return;
+   }
+
+   const url = new URL(
+    "https://docs.google.com/forms/d/e/1FAIpQLSeOEoSfyDwDdTPOGpnXVwR4wjRGIegh9ujJubkZsOj5kz6l6w/viewform?usp=publish-editor",
+   );
+
+   url.searchParams.append("usp", "pp_url");
+
+   url.searchParams.append("entry.538273347", form.fullName);
+   url.searchParams.append("entry.2752828", form.phone);
+   url.searchParams.append("entry.1784630074", form.email);
+   url.searchParams.append("entry.215131592", form.organization);
+   url.searchParams.append("entry.569696349", form.apparelType);
+   url.searchParams.append("entry.2089658901", form.quantity);
+   url.searchParams.append("entry.22538892", form.message);
+
+   window.open(url.toString(), "_blank");
+
+   showNotification("Opening Google Form...", "success");
+
+   setForm({
+     fullName: "",
+     phone: "",
+     email: "",
+     organization: "",
+     apparelType: "",
+     quantity: "",
+     message: "",
+   });
+
+   setErrors({});
+ };
 
   const borderColor = (field) => (errors[field] ? "#e74c3c" : "#e0e0e0");
 
@@ -139,7 +151,7 @@ export default function EnquiryForm() {
                   name="fullName"
                   value={form.fullName}
                   onChange={handleChange}
-                  placeholder="John Doe"
+                  placeholder="Arya"
                   style={{ borderColor: borderColor("fullName") }}
                 />
               </div>
@@ -150,7 +162,7 @@ export default function EnquiryForm() {
                   name="phone"
                   value={form.phone}
                   onChange={handleChange}
-                  placeholder="+91 98765 43210"
+                  placeholder="+91 1234567890"
                   style={{ borderColor: borderColor("phone") }}
                 />
               </div>
@@ -164,7 +176,7 @@ export default function EnquiryForm() {
                   name="email"
                   value={form.email}
                   onChange={handleChange}
-                  placeholder="john@example.com"
+                  placeholder="Arya@gmail.com"
                   style={{ borderColor: borderColor("email") }}
                 />
               </div>
@@ -207,58 +219,6 @@ export default function EnquiryForm() {
                   min="1"
                   style={{ borderColor: borderColor("quantity") }}
                 />
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label>Upload Design (Optional)</label>
-              <div
-                className="file-upload"
-                onDragEnter={() => setDragOver(true)}
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  setDragOver(true);
-                }}
-                onDragLeave={() => setDragOver(false)}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  setDragOver(false);
-                  handleFile(e.dataTransfer.files);
-                }}
-              >
-                <input
-                  ref={fileRef}
-                  type="file"
-                  accept="image/*,.pdf"
-                  style={{
-                    position: "absolute",
-                    width: "100%",
-                    height: "100%",
-                    opacity: 0,
-                    cursor: "pointer",
-                    zIndex: 2,
-                  }}
-                  onChange={(e) => handleFile(e.target.files)}
-                />
-                <div
-                  className="file-upload-label"
-                  style={
-                    dragOver
-                      ? {
-                          borderColor: "#25D366",
-                          backgroundColor: "rgba(37,211,102,0.1)",
-                        }
-                      : {}
-                  }
-                >
-                  <i className="fas fa-cloud-upload-alt"></i>
-                  <span>
-                    {fileName
-                      ? `Selected: ${fileName}`
-                      : "Click to upload or drag and drop"}
-                  </span>
-                  <small>SVG, PNG, JPG or PDF (MAX. 10MB)</small>
-                </div>
               </div>
             </div>
 
