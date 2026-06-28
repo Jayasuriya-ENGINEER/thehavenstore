@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-
-const LOGO_SVG = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 120'%3E%3Crect x='0' y='20' width='80' height='80' rx='12' fill='%23111111'/%3E%3Ctext x='40' y='72' font-family='Arial' font-weight='bold' font-size='50' fill='white' text-anchor='middle'%3ETH%3C/text%3E%3Ctext x='100' y='72' font-family='Arial' font-weight='bold' font-size='40' fill='%23111111'%3ETHE HAVEN%3C/text%3E%3C/svg%3E`;
+import logo from "../assets/logo.png";
+//const LOGO_SVG = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 120'%3E%3Crect x='0' y='20' width='80' height='80' rx='12' fill='%23111111'/%3E%3Ctext x='40' y='72' font-family='Arial' font-weight='bold' font-size='50' fill='white' text-anchor='middle'%3ETH%3C/text%3E%3Ctext x='100' y='72' font-family='Arial' font-weight='bold' font-size='40' fill='%23111111'%3ETHE HAVEN%3C/text%3E%3C/svg%3E`;
 
 const navItems = [
   { label: "Home", href: "#home" },
@@ -62,7 +62,7 @@ export default function Navbar() {
           className="nav-logo"
           onClick={(e) => handleLinkClick(e, "#home")}
         >
-          <img src={LOGO_SVG} alt="The Haven Logo" />
+          <img src={logo} alt="The Haven Logo" />
         </a>
 
         <div className={`nav-menu${menuOpen ? " active" : ""}`} id="navMenu">

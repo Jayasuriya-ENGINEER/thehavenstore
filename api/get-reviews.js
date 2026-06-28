@@ -104,10 +104,6 @@ export default async function handler(req, res) {
       return res.status(200).json(fallbackReviews);
     }
 
-    // ==========================================
-    // Clean and format reviews
-    // ==========================================
-
     const formatted = reviews
 
       // only 4★ and above

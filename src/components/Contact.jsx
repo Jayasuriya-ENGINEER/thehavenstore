@@ -1,14 +1,19 @@
 const contactDetails = [
-  { icon: "fas fa-phone-alt", title: "Phone", text: "+91 XXXXX XXXXX" },
-  { icon: "fas fa-envelope", title: "Email", text: "hello@thehaven.com" },
+  { icon: "fas fa-phone-alt", title: "Phone", text: "+91 83769 07227" },
+  {
+    icon: "fas fa-envelope",
+    title: "Email",
+    text: "thehavenstoreofficial@gmail.com",
+  },
   {
     icon: "fas fa-map-marker-alt",
     title: "Address",
     text: (
       <>
-        Your Business Address
+        70, behind Gaur Homes Elegante, Shatabdi Puram, Block I, Block E,
+        Govindpuram,
         <br />
-        City, State, ZIP
+        Ghaziabad, Uttar Pradesh - 201 013
       </>
     ),
   },
@@ -18,6 +23,9 @@ const contactDetails = [
     text: "Mon - Sat: 9:00 AM - 7:00 PM",
   },
 ];
+
+const mapEmbedUrl = "https://maps.app.goo.gl/5Ur299zSmFGcN3Sn9";
+const mapOpenUrl = "https://maps.app.goo.gl/5Ur299zSmFGcN3Sn9";
 
 export default function Contact() {
   return (
@@ -47,7 +55,7 @@ export default function Contact() {
             </div>
 
             <a
-              href="https://wa.me/91XXXXXXXXXX"
+              href="https://wa.me/918376907227"
               className="btn btn-whatsapp btn-large"
               target="_blank"
               rel="noreferrer"
@@ -58,11 +66,21 @@ export default function Contact() {
           </div>
 
           <div className="contact-map">
-            <div className="map-placeholder">
-              <i className="fas fa-map-marked-alt"></i>
-              <p>Google Maps Integration</p>
-              <small>Replace with actual map embed</small>
-            </div>
+            <iframe
+              src={mapEmbedUrl}
+              title="Our location on map"
+              loading="lazy"
+              allowFullScreen
+              referrerPolicy="no-referrer-when-downgrade"
+            ></iframe>
+            <a
+              href={mapOpenUrl}
+              className="map-fallback"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Open in Google Maps
+            </a>
           </div>
         </div>
       </div>
