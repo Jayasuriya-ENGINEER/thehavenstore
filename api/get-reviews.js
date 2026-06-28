@@ -1,32 +1,17 @@
-// pages/api/get-reviews.js
-
-const fallbackTestimonials = [
-  {
-    text: "The quality exceeded our expectations. The custom apparel was perfect.",
-    name: "Sarah Johnson",
-    role: "Verified Client",
-    rating: 5,
-  },
-];
-
 export default async function handler(req, res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Content-Type", "application/json");
-
   const API_TOKEN = process.env.APIFY_API_TOKEN;
 
-  // Check whether the environment variable is available
-  if (!API_TOKEN) {
+  try {
+    const response = await fetch(
+      `https://api.apify.com/v2/users/me?token=${API_TOKEN}`,
+    );
+
+    const data = await response.json();
+
+    return res.status(200).json(data);
+  } catch (err) {
     return res.status(500).json({
-      success: false,
-      error: "APIFY_API_TOKEN is missing",
+      error: err.message,
     });
   }
-
-  // For now, just verify the API route works
-  return res.status(200).json({
-    success: true,
-    message: "API route is working",
-    tokenFound: true,
-  });
 }
