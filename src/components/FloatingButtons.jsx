@@ -12,7 +12,7 @@ export default function FloatingButtons() {
   return (
     <div className="floating-buttons">
       <a
-        href="https://wa.me/7502737734"
+        href="https://wa.me/8376907227"
         className="floating-whatsapp"
         target="_blank"
         rel="noreferrer"

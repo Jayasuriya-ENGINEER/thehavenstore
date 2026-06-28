@@ -1,4 +1,4 @@
-import freepic from "../assets/freepic.png";
+
 import dailywear from "../assets/dailywear.jpg";
 const categories = [
   { icon: "fas fa-graduation-cap", label: "College Clubs" },

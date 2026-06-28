@@ -17,7 +17,7 @@ const socials = [
     href: "https://facebook.com/yourpage",
   },
   {
-    icon: "fab fa-x-twitter-white",
+    icon: "fab fa-discord",
     color: "#ffffff",
     label: "Twitter",
     href: "https://x.com/yourhandle",
@@ -25,12 +25,12 @@ const socials = [
   {
     icon: "fab fa-youtube",
     label: "YouTube",
-    href: "https://youtube.com/@yourchannel",
+    href: "https://youtube.com/@the_haven_store?si=XVIz88cuQQ1hwulr",
   },
   {
     icon: "fab fa-behance",
     label: "Behance",
-    href: "https://behance.net/yourprofile",
+    href: "https://www.behance.net/thehavenstore",
   },
   {
     icon: "fab fa-pinterest-p",
