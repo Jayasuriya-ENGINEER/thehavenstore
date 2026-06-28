@@ -18,6 +18,7 @@ const socials = [
   },
   {
     icon: "fab fa-x-twitter",
+    color: "#ffffff",
     label: "Twitter",
     href: "https://x.com/yourhandle",
   },
@@ -154,3 +155,6 @@ export default function Footer() {
     </footer>
   );
 }
+
+
+
