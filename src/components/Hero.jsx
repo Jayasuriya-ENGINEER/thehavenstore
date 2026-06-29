@@ -1,5 +1,5 @@
 import banner1 from "../assets/banner1.jpg";
-import bannerforhome from "../assets/bannerforhome.jpeg";
+import bannerforhome from "../assets/bannerforhome.png";
 import logo from "../assets/logo.png";
 
 //const LOGO_SVG = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 120'%3E%3Crect x='0' y='20' width='80' height='80' rx='12' fill='%23111111'/%3E%3Ctext x='40' y='72' font-family='Arial' font-weight='bold' font-size='50' fill='white' text-anchor='middle'%3ETH%3C/text%3E%3Ctext x='100' y='72' font-family='Arial' font-weight='bold' font-size='40' fill='%23111111'%3ETHE HAVEN%3C/text%3E%3C/svg%3E`;

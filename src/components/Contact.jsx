@@ -69,7 +69,6 @@ export default function Contact() {
               width="600"
               height="450"
               style={{ border: 0 }}
-              allowFullScreen
               loading="lazy"
               referrerPolicy="strict-origin-when-cross-origin"
             />

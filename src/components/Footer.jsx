@@ -55,6 +55,14 @@ const services = [
   "Event Merchandise",
 ];
 
+const policy = [
+  { href: "#", label: "Shipping Policy" },
+  { href: "#", label: "Return Policy" },
+  { href: "#", label: "Privacy Policy" },
+  { href: "#", label: "Terms of Service" },
+  { href: "#", label: "FAQ" },
+];
+
 const scrollTo = (href) => {
   const el = document.querySelector(href);
   if (el) {
@@ -118,6 +126,8 @@ export default function Footer() {
               ))}
             </ul>
           </div>
+
+          
 
           <div className="footer-contact">
             <h4>Contact Info</h4>
