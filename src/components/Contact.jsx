@@ -1,5 +1,4 @@
 const contactDetails = [
-  { icon: "fas fa-phone-alt", title: "Phone", text: "+91 83769 07227" },
   {
     icon: "fas fa-envelope",
     title: "Email",
@@ -10,7 +9,7 @@ const contactDetails = [
     title: "Address",
     text: (
       <>
-        70, behind Gaur Homes Elegante, Shatabdi Puram, Block I, Block E,
+        70, behind Gaur Homes Elegante,
         Govindpuram,
         <br />
         Ghaziabad, Uttar Pradesh - 201 013

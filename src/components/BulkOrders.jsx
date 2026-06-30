@@ -2,11 +2,9 @@
 import dailywear from "../assets/dailywear.jpg";
 const categories = [
   { icon: "fas fa-graduation-cap", label: "College Clubs" },
-  { icon: "fas fa-users", label: "Student Societies" },
   { icon: "fas fa-briefcase", label: "Corporate Teams" },
   { icon: "fas fa-calendar-alt", label: "Events" },
   { icon: "fas fa-futbol", label: "Sports Teams" },
-  { icon: "fas fa-handshake", label: "Communities" },
   { icon: "fas fa-rocket", label: "Startups" },
   { icon: "fas fa-school", label: "Schools & Universities" },
 ];

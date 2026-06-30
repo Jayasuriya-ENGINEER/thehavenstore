@@ -63,6 +63,11 @@ const policy = [
   { href: "#", label: "FAQ" },
 ];
 
+const carreer = [
+  { href: "#", label: "Campus Ambassadors" },
+  { href: "#", label: "Internships" },
+];
+
 const scrollTo = (href) => {
   const el = document.querySelector(href);
   if (el) {
@@ -76,27 +81,6 @@ export default function Footer() {
     <footer className="footer">
       <div className="container">
         <div className="footer-grid">
-          <div className="footer-brand">
-            <img src={logo} alt="The Haven" />
-            <p>
-              Premium custom apparel manufacturing for clubs, teams, and
-              organizations. Quality, style, and comfort in every stitch.
-            </p>
-            <div className="social-links">
-              {socials.map((s) => (
-                <a
-                  href={s.href}
-                  key={s.label}
-                  aria-label={s.label}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <i className={s.icon}></i>
-                </a>
-              ))}
-            </div>
-          </div>
-
           <div className="footer-links">
             <h4>Quick Links</h4>
             <ul>
@@ -127,7 +111,29 @@ export default function Footer() {
             </ul>
           </div>
 
-          
+          <div className="footer-links">
+            <h4>Policies</h4>
+
+            <ul>
+              {policy.map((item) => (
+                <li key={item.label}>
+                  <a href={item.href}>{item.label}</a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="footer-links">
+            <h4>Careers</h4>
+
+            <ul>
+              {carreer.map((item) => (
+                <li key={item.label}>
+                  <a href={item.href}>{item.label}</a>
+                </li>
+              ))}
+            </ul>
+          </div>
 
           <div className="footer-contact">
             <h4>Contact Info</h4>
@@ -148,18 +154,22 @@ export default function Footer() {
           </div>
         </div>
 
+        <div className="footer-social">
+          {socials.map((s) => (
+            <a
+              key={s.label}
+              href={s.href}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={s.label}
+            >
+              <i className={s.icon}></i>
+            </a>
+          ))}
+        </div>
+
         <div className="footer-bottom">
           <p>&copy; 2026 The Haven. All rights reserved.</p>
-          <a
-            href="#home"
-            className="back-to-top"
-            onClick={(e) => {
-              e.preventDefault();
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }}
-          >
-            <i className="fas fa-arrow-up"></i>
-          </a>
         </div>
       </div>
     </footer>

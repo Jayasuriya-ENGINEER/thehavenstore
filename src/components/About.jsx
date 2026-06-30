@@ -13,11 +13,6 @@ const features = [
     desc: "Bring your designs to life with our expert manufacturing services.",
   },
   {
-    icon: "fas fa-palette",
-    title: "Unique Designs",
-    desc: "Stand out with creative and trendy apparel designs.",
-  },
-  {
     icon: "fas fa-shield-alt",
     title: "Premium Quality",
     desc: "Only the finest fabrics and materials for lasting comfort.",
@@ -104,8 +99,11 @@ export default function About() {
                 <div className="feature-icon">
                   <i className={f.icon}></i>
                 </div>
-                <h3>{f.title}</h3>
-                <p>{f.desc}</p>
+
+                <div className="feature-content">
+                  <h3>{f.title}</h3>
+                  <p>{f.desc}</p>
+                </div>
               </div>
             ))}
           </div>

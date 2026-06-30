@@ -88,7 +88,7 @@ export default function Products() {
             <div className={`product-card reveal ${p.delay}`} key={p.name}>
               <div className="product-image">
                 {p.comingSoon && (
-                  <span className="coming-soon-badge">Coming Soon</span>
+                  <span className="coming-soon-badge">Available Soon</span>
                 )}
 
                 <img src={p.img} alt={p.alt} />

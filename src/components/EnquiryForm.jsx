@@ -141,99 +141,99 @@ export default function EnquiryForm() {
               Fill out the form below and we'll get back to you within 24 hours.
             </p>
           </div>
-
           <form className="enquiry-form" onSubmit={handleSubmit}>
-            <div className="form-row">
-              <div className="form-group">
-                <label>Full Name *</label>
-                <input
-                  type="text"
-                  name="fullName"
-                  value={form.fullName}
-                  onChange={handleChange}
-                  placeholder="Arya"
-                  style={{ borderColor: borderColor("fullName") }}
-                />
-              </div>
-              <div className="form-group">
-                <label>Phone Number *</label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={form.phone}
-                  onChange={handleChange}
-                  placeholder="+91 1234567890"
-                  style={{ borderColor: borderColor("phone") }}
-                />
-              </div>
-            </div>
-
-            <div className="form-row">
-              <div className="form-group">
-                <label>Email Address *</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={form.email}
-                  onChange={handleChange}
-                  placeholder="Arya@gmail.com"
-                  style={{ borderColor: borderColor("email") }}
-                />
-              </div>
-              <div className="form-group">
-                <label>Organization Name</label>
-                <input
-                  type="text"
-                  name="organization"
-                  value={form.organization}
-                  onChange={handleChange}
-                  placeholder="Your Club/Company Name"
-                />
-              </div>
-            </div>
-
-            <div className="form-row">
-              <div className="form-group">
-                <label>Type of Apparel *</label>
-                <select
-                  name="apparelType"
-                  value={form.apparelType}
-                  onChange={handleChange}
-                  style={{ borderColor: borderColor("apparelType") }}
-                >
-                  {apparelOptions.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Quantity Required *</label>
-                <input
-                  type="number"
-                  name="quantity"
-                  value={form.quantity}
-                  onChange={handleChange}
-                  placeholder="e.g., 50"
-                  min="1"
-                  style={{ borderColor: borderColor("quantity") }}
-                />
-              </div>
+            <div className="form-group">
+              <label>Full Name *</label>
+              <input
+                type="text"
+                name="fullName"
+                value={form.fullName}
+                onChange={handleChange}
+                placeholder="Arya"
+                style={{ borderColor: borderColor("fullName") }}
+              />
             </div>
 
             <div className="form-group">
+              <label>Phone Number *</label>
+              <input
+                type="tel"
+                name="phone"
+                value={form.phone}
+                onChange={handleChange}
+                placeholder="+91 1234567890"
+                style={{ borderColor: borderColor("phone") }}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Email Address *</label>
+              <input
+                type="email"
+                name="email"
+                value={form.email}
+                onChange={handleChange}
+                placeholder="Arya@gmail.com"
+                style={{ borderColor: borderColor("email") }}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Organization Name</label>
+              <input
+                type="text"
+                name="organization"
+                value={form.organization}
+                onChange={handleChange}
+                placeholder="Your Club/Company Name"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Type of Apparel *</label>
+              <select
+                name="apparelType"
+                value={form.apparelType}
+                onChange={handleChange}
+                style={{ borderColor: borderColor("apparelType") }}
+              >
+                {apparelOptions.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>Quantity Required *</label>
+              <input
+                type="number"
+                name="quantity"
+                value={form.quantity}
+                onChange={handleChange}
+                placeholder="e.g., 50"
+                min="1"
+                style={{ borderColor: borderColor("quantity") }}
+              />
+            </div>
+
+            {/* Full width */}
+            <div className="form-group full-width">
               <label>Message</label>
               <textarea
                 name="message"
-                value={form.message}
                 rows={4}
+                value={form.message}
                 onChange={handleChange}
                 placeholder="Tell us more about your requirements..."
               />
             </div>
 
-            <button type="submit" className="btn btn-primary btn-full">
+            <button
+              type="submit"
+              className="btn btn-primary btn-full full-width"
+            >
               Submit Enquiry
               <i className="fas fa-arrow-right"></i>
             </button>

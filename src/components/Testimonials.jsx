@@ -70,7 +70,6 @@ export default function Testimonials() {
   const half = Math.ceil(reviews.length / 2);
 
   const row1 = [...reviews.slice(0, half), ...reviews.slice(0, half)];
-  const row2 = [...reviews.slice(half), ...reviews.slice(half)];
 
   function renderStars(rating) {
     return (
@@ -134,12 +133,6 @@ export default function Testimonials() {
           <div className="marquee-row">
             <div className="marquee-track track-left">
               {row1.map((review, index) => Card(review, index))}
-            </div>
-          </div>
-
-          <div className="marquee-row">
-            <div className="marquee-track track-right">
-              {row2.map((review, index) => Card(review, index))}
             </div>
           </div>
         </div>
