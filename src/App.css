@@ -112,8 +112,11 @@ section {
   margin: 0 auto;
   padding: 0 24px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 16px;
+}
+.nav-logo {
+  flex-shrink: 0;
 }
 .nav-logo img {
   height: 50px;
@@ -127,6 +130,7 @@ section {
   display: flex;
   align-items: center;
   gap: 40px;
+  margin-left: auto;
 }
 .nav-link {
   font-family: var(--font-secondary);
@@ -150,21 +154,51 @@ section {
 .nav-link.active::after {
   width: 100%;
 }
-.nav-cta {
-  display: inline-flex;
+.nav-actions {
+  display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 24px;
-  background-color: var(--color-whatsapp);
-  color: var(--color-white);
-  border-radius: var(--radius-md);
-  font-weight: 600;
-  font-size: 0.9rem;
-  transition: var(--transition-base);
+  margin-left: 16px;
 }
-.nav-cta:hover {
-  background-color: var(--color-whatsapp-dark);
-  transform: translateY(-2px);
+.nav-icon-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  color: var(--color-black);
+  background-color: transparent;
+  border: 1.5px solid transparent;
+  font-size: 1.05rem;
+  transition: var(--transition-base);
+  cursor: pointer;
+  font-family: inherit;
+  padding: 0;
+}
+.nav-icon-btn:hover {
+  background-color: var(--color-light-grey);
+  border-color: var(--color-grey);
+  transform: translateY(-1px);
+}
+.nav-cart-btn .cart-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-black);
+  color: var(--color-white);
+  border-radius: 50%;
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 1;
+  font-family: var(--font-secondary);
 }
 .hamburger {
   display: none;
@@ -1563,8 +1597,18 @@ section {
   .hamburger.active span:nth-child(3) {
     transform: rotate(-45deg) translate(7px, -6px);
   }
-  .nav-cta {
-    display: none;
+  .nav-actions {
+    margin-left: auto;
+    margin-right: 4px;
+    gap: 4px;
+  }
+  .nav-icon-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+  .hamburger {
+    margin-left: 0;
   }
   section {
     padding: 60px 0;
