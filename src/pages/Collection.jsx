@@ -13,23 +13,27 @@ import "./Shop.css";
 
 /**
  * Shared collection page for Men / Women / Accessories.
- * Live products come from Firebase; Men falls back to local samples if catalog empty.
+ * Live products come from Firebase. Men only uses local samples if the
+ * catalog is empty or the fetch fails — never while loading (avoids flash).
  */
 export default function Collection({ sectionKey }) {
   const section = SHOP_SECTIONS[sectionKey] || SHOP_SECTIONS.men;
   const useLocalFallback = sectionKey === "men";
 
   const [filter, setFilter] = useState("All");
-  const [products, setProducts] = useState(useLocalFallback ? mensProducts : []);
+  // Always start empty so we never flash sample products over live catalog
+  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [fromFirestore, setFromFirestore] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     setFilter("All");
+    setProducts([]);
+    setFromFirestore(false);
+    setLoading(true);
 
     async function load() {
-      setLoading(true);
       try {
         const list = await fetchProducts({
           gender: section.gender,
@@ -78,7 +82,11 @@ export default function Collection({ sectionKey }) {
   }, [filter, products]);
 
   const showSampleNote =
-    !fromFirestore && useLocalFallback && products === mensProducts;
+    !loading &&
+    !fromFirestore &&
+    useLocalFallback &&
+    products.length > 0 &&
+    products[0]?.id === mensProducts[0]?.id;
 
   return (
     <>
@@ -113,7 +121,7 @@ export default function Collection({ sectionKey }) {
                 </>
               )}
             </p>
-            {categories.length > 1 && (
+            {!loading && categories.length > 1 && (
               <div className="shop-filters" role="tablist" aria-label="Category">
                 {categories.map((cat) => (
                   <button
@@ -131,7 +139,20 @@ export default function Collection({ sectionKey }) {
             )}
           </div>
 
-          {!loading && filtered.length === 0 ? (
+          {loading ? (
+            <div className="shop-grid" aria-busy="true" aria-label="Loading products">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="shop-card shop-card-skeleton">
+                  <div className="shop-card-image shop-skel-block" />
+                  <div className="shop-card-body">
+                    <div className="shop-skel-line shop-skel-line-sm" />
+                    <div className="shop-skel-line shop-skel-line-lg" />
+                    <div className="shop-skel-line shop-skel-line-md" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : filtered.length === 0 ? (
             <div className="shop-empty">
               <h2>No products yet</h2>
               <p>{section.emptyHint}</p>

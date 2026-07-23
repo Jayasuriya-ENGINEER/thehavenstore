@@ -31,7 +31,7 @@ export const SHOP_SECTIONS = {
     title: "Accessories",
     description:
       "Bags, caps, and finishing pieces — small details that complete the look.",
-    emptyHint: "Add products with gender Accessories in the admin panel.",
+    emptyHint: "WILL ADD PRODUCTS SHORTLY.",
   },
 };
 

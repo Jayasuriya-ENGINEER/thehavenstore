@@ -1724,23 +1724,3 @@ section {
   overflow: hidden;
 }
 
-.coming-soon-badge {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  z-index: 2;
-
-  background: linear-gradient(135deg, #ff9800, #ff5722);
-  color: #fff;
-
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-
-  padding: 6px 12px;
-  border-radius: 999px;
-
-  box-shadow: 0 6px 18px rgba(255, 87, 34, 0.35);
-
-  text-transform: uppercase;
-}

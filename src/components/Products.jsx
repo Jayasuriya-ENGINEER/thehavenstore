@@ -7,14 +7,14 @@ import dailywear from "../assets/dailywear.jpg";
 import bottom from "../assets/bottom.png";
 import accessories from "../assets/accessories.png";
 
-const products = [
+export const products = [
   {
     img: tshirt,
     alt: "T-Shirt",
     name: "T-Shirts",
     desc: "Comfortable, stylish t-shirts perfect for any occasion.",
     delay: "",
-    comingSoon: false,
+    apparelValue: "tshirt",
   },
   {
     img: polo,
@@ -22,7 +22,7 @@ const products = [
     name: "Polo T-Shirts",
     desc: "Classic polo shirts for a smart-casual look.",
     delay: "delay-100",
-    comingSoon: false,
+    apparelValue: "polo",
   },
   {
     img: hoodie,
@@ -30,7 +30,7 @@ const products = [
     name: "Hoodies",
     desc: "Cozy hoodies perfect for casual wear and team spirit.",
     delay: "delay-200",
-    comingSoon: false,
+    apparelValue: "hoodie",
   },
   {
     img: sweatwear,
@@ -38,7 +38,7 @@ const products = [
     name: "Sweatshirts",
     desc: "Warm and comfortable sweatshirts for all seasons.",
     delay: "",
-    comingSoon: true,
+    apparelValue: "sweatshirt",
   },
   {
     img: formaloutfit,
@@ -46,7 +46,7 @@ const products = [
     name: "Dresses",
     desc: "Elegant dresses for special occasions and events.",
     delay: "delay-100",
-    comingSoon: true,
+    apparelValue: "dress",
   },
   {
     img: dailywear,
@@ -54,7 +54,7 @@ const products = [
     name: "Tops",
     desc: "Versatile tops for everyday fashion and style.",
     delay: "delay-200",
-    comingSoon: false,
+    apparelValue: "top",
   },
   {
     img: bottom,
@@ -62,7 +62,7 @@ const products = [
     name: "Bottoms",
     desc: "Comfortable pants, shorts, and joggers.",
     delay: "",
-    comingSoon: true,
+    apparelValue: "bottom",
   },
   {
     img: accessories,
@@ -70,7 +70,7 @@ const products = [
     name: "Accessories",
     desc: "Complete your look with our range of accessories.",
     delay: "delay-100",
-    comingSoon: true,
+    apparelValue: "accessory",
   },
 ];
 
@@ -87,10 +87,6 @@ export default function Products() {
           {products.map((p) => (
             <div className={`product-card reveal ${p.delay}`} key={p.name}>
               <div className="product-image">
-                {p.comingSoon && (
-                  <span className="coming-soon-badge">Available Soon</span>
-                )}
-
                 <img src={p.img} alt={p.alt} />
               </div>
               <h3>{p.name}</h3>

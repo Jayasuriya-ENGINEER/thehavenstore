@@ -10,6 +10,7 @@ const navItems = [
   { label: "Men", type: "route", to: "/men" },
   { label: "Women", type: "route", to: "/women" },
   { label: "Accessories", type: "route", to: "/accessories" },
+  { label: "Bulk Orders", type: "route", to: "/bulk-orders" },
 ];
 
 export default function Navbar({ solid = false }) {

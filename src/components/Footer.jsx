@@ -1,4 +1,5 @@
 //const LOGO_SVG_WHITE = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 120'%3E%3Crect x='0' y='20' width='80' height='80' rx='12' fill='white'/%3E%3Ctext x='40' y='72' font-family='Arial' font-weight='bold' font-size='50' fill='%23111111' text-anchor='middle'%3ETH%3C/text%3E%3Ctext x='100' y='72' font-family='Arial' font-weight='bold' font-size='40' fill='white'%3ETHE HAVEN%3C/text%3E%3C/svg%3E`;
+import { Link } from "react-router-dom";
 import logo from  "../assets/logo.png";
 const socials = [
   {
@@ -40,11 +41,11 @@ const socials = [
 ];
 
 const quickLinks = [
-  { href: "#home", label: "Home" },
-  { href: "#about", label: "About Us" },
-  { href: "#products", label: "Products" },
-  { href: "#bulk-orders", label: "Bulk Orders" },
-  { href: "#testimonials", label: "Testimonials" },
+  { href: "#home", label: "Home", type: "hash" },
+  { href: "#about", label: "About Us", type: "hash" },
+  { href: "#products", label: "Products", type: "hash" },
+  { href: "/bulk-orders", label: "Bulk Orders", type: "route" },
+  { href: "#testimonials", label: "Testimonials", type: "hash" },
 ];
 
 const services = [
@@ -86,15 +87,19 @@ export default function Footer() {
             <ul>
               {quickLinks.map((l) => (
                 <li key={l.label}>
-                  <a
-                    href={l.href}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      scrollTo(l.href);
-                    }}
-                  >
-                    {l.label}
-                  </a>
+                  {l.type === "route" ? (
+                    <Link to={l.href}>{l.label}</Link>
+                  ) : (
+                    <a
+                      href={l.href}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        scrollTo(l.href);
+                      }}
+                    >
+                      {l.label}
+                    </a>
+                  )}
                 </li>
               ))}
             </ul>

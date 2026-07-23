@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 function Notification({ msg, type, onClose }) {
   if (!msg) return null;
@@ -31,7 +31,7 @@ function Notification({ msg, type, onClose }) {
   );
 }
 
-const apparelOptions = [
+export const apparelOptions = [
   { value: "", label: "Select Apparel Type" },
   { value: "tshirt", label: "T-Shirts" },
   { value: "polo", label: "Polo T-Shirts" },
@@ -44,7 +44,11 @@ const apparelOptions = [
   { value: "multiple", label: "Multiple Items" },
 ];
 
-export default function EnquiryForm() {
+export default function EnquiryForm({
+  selectedApparel = null,
+  embedded = false,
+  hideHeader = false,
+}) {
   const [form, setForm] = useState({
     fullName: "",
     phone: "",
@@ -58,6 +62,13 @@ export default function EnquiryForm() {
 
   const [notification, setNotification] = useState({ msg: "", type: "" });
 
+  // Sync apparel type when a product is selected on the bulk orders page
+  useEffect(() => {
+    if (selectedApparel != null && selectedApparel !== "") {
+      setForm((prev) => ({ ...prev, apparelType: selectedApparel }));
+      setErrors((prev) => ({ ...prev, apparelType: false }));
+    }
+  }, [selectedApparel]);
 
   const showNotification = (msg, type) => {
     setNotification({ msg, type });
@@ -83,162 +94,174 @@ export default function EnquiryForm() {
     setErrors((prev) => ({ ...prev, [name]: false }));
   };
 
+  const handleSubmit = (e) => {
+    e.preventDefault();
 
+    const errs = validate();
 
- const handleSubmit = (e) => {
-   e.preventDefault();
+    if (Object.keys(errs).length > 0) {
+      setErrors(errs);
+      showNotification("Please fill in all required fields correctly.", "error");
+      return;
+    }
 
-   const errs = validate();
+    const url = new URL(
+      "https://docs.google.com/forms/d/e/1FAIpQLSeOEoSfyDwDdTPOGpnXVwR4wjRGIegh9ujJubkZsOj5kz6l6w/viewform?usp=publish-editor",
+    );
 
-   if (Object.keys(errs).length > 0) {
-     setErrors(errs);
-     showNotification("Please fill in all required fields correctly.", "error");
-     return;
-   }
+    url.searchParams.append("usp", "pp_url");
 
-   const url = new URL(
-    "https://docs.google.com/forms/d/e/1FAIpQLSeOEoSfyDwDdTPOGpnXVwR4wjRGIegh9ujJubkZsOj5kz6l6w/viewform?usp=publish-editor",
-   );
+    url.searchParams.append("entry.538273347", form.fullName);
+    url.searchParams.append("entry.2752828", form.phone);
+    url.searchParams.append("entry.1784630074", form.email);
+    url.searchParams.append("entry.215131592", form.organization);
+    url.searchParams.append("entry.569696349", form.apparelType);
+    url.searchParams.append("entry.2089658901", form.quantity);
+    url.searchParams.append("entry.22538892", form.message);
 
-   url.searchParams.append("usp", "pp_url");
+    window.open(url.toString(), "_blank");
 
-   url.searchParams.append("entry.538273347", form.fullName);
-   url.searchParams.append("entry.2752828", form.phone);
-   url.searchParams.append("entry.1784630074", form.email);
-   url.searchParams.append("entry.215131592", form.organization);
-   url.searchParams.append("entry.569696349", form.apparelType);
-   url.searchParams.append("entry.2089658901", form.quantity);
-   url.searchParams.append("entry.22538892", form.message);
+    showNotification("Opening Google Form...", "success");
 
-   window.open(url.toString(), "_blank");
+    setForm({
+      fullName: "",
+      phone: "",
+      email: "",
+      organization: "",
+      apparelType: selectedApparel || "",
+      quantity: "",
+      message: "",
+    });
 
-   showNotification("Opening Google Form...", "success");
-
-   setForm({
-     fullName: "",
-     phone: "",
-     email: "",
-     organization: "",
-     apparelType: "",
-     quantity: "",
-     message: "",
-   });
-
-   setErrors({});
- };
+    setErrors({});
+  };
 
   const borderColor = (field) => (errors[field] ? "#e74c3c" : "#e0e0e0");
 
+  const formBody = (
+    <>
+      <Notification {...notification} />
+      {!hideHeader && (
+        <div className="enquiry-header">
+          <span className="section-tag">Get a Quote</span>
+          <h2 className="section-title">Request a Price Enquiry</h2>
+          <p>
+            Fill out the form below and we'll get back to you within 24 hours.
+          </p>
+        </div>
+      )}
+      <form className="enquiry-form" onSubmit={handleSubmit}>
+        <div className="form-group">
+          <label>Full Name *</label>
+          <input
+            type="text"
+            name="fullName"
+            value={form.fullName}
+            onChange={handleChange}
+            placeholder="Arya"
+            style={{ borderColor: borderColor("fullName") }}
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Phone Number *</label>
+          <input
+            type="tel"
+            name="phone"
+            value={form.phone}
+            onChange={handleChange}
+            placeholder="+91 1234567890"
+            style={{ borderColor: borderColor("phone") }}
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Email Address *</label>
+          <input
+            type="email"
+            name="email"
+            value={form.email}
+            onChange={handleChange}
+            placeholder="Arya@gmail.com"
+            style={{ borderColor: borderColor("email") }}
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Organization Name</label>
+          <input
+            type="text"
+            name="organization"
+            value={form.organization}
+            onChange={handleChange}
+            placeholder="Your Club/Company Name"
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Type of Apparel *</label>
+          <select
+            name="apparelType"
+            value={form.apparelType}
+            onChange={handleChange}
+            style={{ borderColor: borderColor("apparelType") }}
+          >
+            {apparelOptions.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="form-group">
+          <label>Quantity Required *</label>
+          <input
+            type="number"
+            name="quantity"
+            value={form.quantity}
+            onChange={handleChange}
+            placeholder="e.g., 50"
+            min="1"
+            style={{ borderColor: borderColor("quantity") }}
+          />
+        </div>
+
+        {/* Full width */}
+        <div className="form-group full-width">
+          <label>Message</label>
+          <textarea
+            name="message"
+            rows={4}
+            value={form.message}
+            onChange={handleChange}
+            placeholder="Tell us more about your requirements..."
+          />
+        </div>
+
+        <button
+          type="submit"
+          className="btn btn-primary btn-full full-width"
+        >
+          Submit Enquiry
+          <i className="fas fa-arrow-right"></i>
+        </button>
+      </form>
+    </>
+  );
+
+  if (embedded) {
+    return (
+      <div className="enquiry-embedded" id="enquiry">
+        {formBody}
+      </div>
+    );
+  }
+
   return (
     <section className="enquiry" id="enquiry">
-      <Notification {...notification} />
       <div className="container">
-        <div className="enquiry-wrapper reveal">
-          <div className="enquiry-header">
-            <span className="section-tag">Get a Quote</span>
-            <h2 className="section-title">Request a Price Enquiry</h2>
-            <p>
-              Fill out the form below and we'll get back to you within 24 hours.
-            </p>
-          </div>
-          <form className="enquiry-form" onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label>Full Name *</label>
-              <input
-                type="text"
-                name="fullName"
-                value={form.fullName}
-                onChange={handleChange}
-                placeholder="Arya"
-                style={{ borderColor: borderColor("fullName") }}
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Phone Number *</label>
-              <input
-                type="tel"
-                name="phone"
-                value={form.phone}
-                onChange={handleChange}
-                placeholder="+91 1234567890"
-                style={{ borderColor: borderColor("phone") }}
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Email Address *</label>
-              <input
-                type="email"
-                name="email"
-                value={form.email}
-                onChange={handleChange}
-                placeholder="Arya@gmail.com"
-                style={{ borderColor: borderColor("email") }}
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Organization Name</label>
-              <input
-                type="text"
-                name="organization"
-                value={form.organization}
-                onChange={handleChange}
-                placeholder="Your Club/Company Name"
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Type of Apparel *</label>
-              <select
-                name="apparelType"
-                value={form.apparelType}
-                onChange={handleChange}
-                style={{ borderColor: borderColor("apparelType") }}
-              >
-                {apparelOptions.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label>Quantity Required *</label>
-              <input
-                type="number"
-                name="quantity"
-                value={form.quantity}
-                onChange={handleChange}
-                placeholder="e.g., 50"
-                min="1"
-                style={{ borderColor: borderColor("quantity") }}
-              />
-            </div>
-
-            {/* Full width */}
-            <div className="form-group full-width">
-              <label>Message</label>
-              <textarea
-                name="message"
-                rows={4}
-                value={form.message}
-                onChange={handleChange}
-                placeholder="Tell us more about your requirements..."
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="btn btn-primary btn-full full-width"
-            >
-              Submit Enquiry
-              <i className="fas fa-arrow-right"></i>
-            </button>
-          </form>
-        </div>
+        <div className="enquiry-wrapper reveal">{formBody}</div>
       </div>
     </section>
   );

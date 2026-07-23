@@ -263,6 +263,120 @@
   margin-top: 2px;
 }
 
+/* Ordered products (static history on bag page) */
+.ck-ordered-section {
+  margin-top: 20px;
+}
+
+.ck-main > .ck-ordered-section:first-child {
+  margin-top: 0;
+}
+
+.ck-order-block {
+  padding: 16px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.ck-order-block:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.ck-order-block:first-of-type {
+  padding-top: 4px;
+}
+
+.ck-order-head {
+  margin-bottom: 12px;
+  padding: 14px 16px;
+  background: #fafafa;
+  border-radius: 12px;
+  border: 1px solid #f0f0f0;
+}
+
+.ck-order-id-chip {
+  display: inline-block;
+  font-weight: 700;
+  font-size: 0.88rem;
+  letter-spacing: 0.01em;
+  margin-bottom: 10px;
+  word-break: break-all;
+}
+
+.ck-order-dates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  font-size: 0.85rem;
+  color: #555;
+  margin-bottom: 8px;
+}
+
+.ck-order-dates span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ck-order-dates i {
+  color: #888;
+  font-size: 0.78rem;
+}
+
+.ck-order-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  font-size: 0.82rem;
+  color: #777;
+  align-items: center;
+}
+
+.ck-order-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #e8f5e9;
+  color: #2e7d32;
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: capitalize;
+}
+
+.ck-order-total {
+  font-weight: 700;
+  color: var(--color-black);
+}
+
+.ck-line-ordered {
+  opacity: 0.98;
+}
+
+.ck-line-ordered .ck-line-img {
+  opacity: 0.95;
+}
+
+.ck-ordered-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #2e7d32;
+}
+
+.ck-ordered-badge i {
+  font-size: 0.85rem;
+}
+
+.ck-hint {
+  color: #888;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
 /* Forms */
 .ck-form-grid {
   display: grid;

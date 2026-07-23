@@ -1,5 +1,6 @@
-
+import { Link } from "react-router-dom";
 import dailywear from "../assets/dailywear.jpg";
+
 const categories = [
   { icon: "fas fa-graduation-cap", label: "College Clubs" },
   { icon: "fas fa-briefcase", label: "Corporate Teams" },
@@ -45,15 +46,10 @@ export default function BulkOrders() {
                 Order on WhatsApp
               </a>
 
-              <a
-                href="https://docs.google.com/forms/d/e/1FAIpQLSeOEoSfyDwDdTPOGpnXVwR4wjRGIegh9ujJubkZsOj5kz6l6w/viewform"
-                className="btn btn-google-form"
-                target="_blank"
-                rel="noreferrer"
-              >
+              <Link to="/bulk-orders" className="btn btn-google-form">
                 <i className="fas fa-file-alt"></i>
                 Request a Quote
-              </a>
+              </Link>
             </div>
           </div>
 

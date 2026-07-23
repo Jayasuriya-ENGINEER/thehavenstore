@@ -25,6 +25,7 @@ import Checkout from "./pages/Checkout";
 import OrderSuccess from "./pages/OrderSuccess";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminRoute from "./components/AdminRoute";
+import BulkOrdersPage from "./pages/BulkOrdersPage";
 
 function HomePage() {
   useScrollReveal();
@@ -62,6 +63,7 @@ function App() {
             <Route path="/women/:productId" element={<ProductDetail />} />
             <Route path="/accessories" element={<Accessories />} />
             <Route path="/accessories/:productId" element={<ProductDetail />} />
+            <Route path="/bulk-orders" element={<BulkOrdersPage />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/order-success/:orderId" element={<OrderSuccess />} />

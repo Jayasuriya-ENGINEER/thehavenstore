@@ -3,7 +3,11 @@ import { Link, useLocation, useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { formatPrice } from "../data/mensProducts";
-import { fetchOrderById } from "../services/orders";
+import {
+  fetchOrderById,
+  formatOrderDate,
+  getExpectedDeliveryDate,
+} from "../services/orders";
 import "./Checkout.css";
 
 export default function OrderSuccess() {
@@ -86,6 +90,23 @@ export default function OrderSuccess() {
                     Email: {address.email}
                   </p>
                 )}
+                <h3 style={{ marginTop: 16 }}>Timeline</h3>
+                <p>
+                  Ordered:{" "}
+                  <strong>{formatOrderDate(order.createdAt)}</strong>
+                  <br />
+                  Expected delivery:{" "}
+                  <strong>
+                    {formatOrderDate(
+                      order.expectedDeliveryAt ||
+                        getExpectedDeliveryDate(order.createdAt),
+                    )}
+                  </strong>
+                  <br />
+                  <span style={{ color: "#777", fontSize: "0.88em" }}>
+                    Delivery within 8 days of order date
+                  </span>
+                </p>
                 <h3 style={{ marginTop: 16 }}>Payment</h3>
                 <p>
                   {order.paymentMethod === "cod"
@@ -104,11 +125,11 @@ export default function OrderSuccess() {
               </div>
 
               <div className="ck-success-actions">
-                <Link to="/men" className="ck-btn ck-btn-primary">
-                  Continue shopping
+                <Link to="/cart" className="ck-btn ck-btn-primary">
+                  View ordered products
                 </Link>
-                <Link to="/" className="ck-btn ck-btn-secondary">
-                  Home
+                <Link to="/men" className="ck-btn ck-btn-secondary">
+                  Continue shopping
                 </Link>
               </div>
             </div>
