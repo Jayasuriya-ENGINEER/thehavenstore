@@ -37,7 +37,6 @@ export default function Checkout() {
   );
   const [errors, setErrors] = useState({});
   const [saveAddress, setSaveAddress] = useState(true);
-  const [paymentMethod, setPaymentMethod] = useState("cod");
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
@@ -207,28 +206,24 @@ export default function Checkout() {
         }
       }
 
-      let paymentFields = {};
-
-      if (paymentMethod === "razorpay") {
-        paymentFields = await payWithRazorpay({
-          amountRupees: total,
-          receipt: `ord_${Date.now()}`.slice(0, 40),
-          customer: {
-            fullName: shippingAddress.fullName,
-            email: shippingAddress.email,
-            phone: shippingAddress.phone,
-          },
-          notes: {
-            itemCount: String(itemCount),
-          },
-        });
-      }
+      const paymentFields = await payWithRazorpay({
+        amountRupees: total,
+        receipt: `ord_${Date.now()}`.slice(0, 40),
+        customer: {
+          fullName: shippingAddress.fullName,
+          email: shippingAddress.email,
+          phone: shippingAddress.phone,
+        },
+        notes: {
+          itemCount: String(itemCount),
+        },
+      });
 
       const order = await placeOrder({
         userId: currentUser?.uid || null,
         items,
         address: shippingAddress,
-        paymentMethod,
+        paymentMethod: "razorpay",
         notes,
         ...paymentFields,
       });
@@ -598,35 +593,17 @@ export default function Checkout() {
                 <div className="ck-card">
                   <h2>Payment method</h2>
                   <p className="ck-card-sub">
-                    Choose cash on delivery or pay online with Razorpay
+                    Pay securely online with Razorpay
                   </p>
 
                   <div className="ck-pay-options">
-                    <label
-                      className={`ck-pay-option${paymentMethod === "cod" ? " selected" : ""}`}
-                    >
-                      <input
-                        type="radio"
-                        name="payment"
-                        value="cod"
-                        checked={paymentMethod === "cod"}
-                        onChange={() => setPaymentMethod("cod")}
-                      />
-                      <div>
-                        <strong>Cash on delivery / Pay on delivery</strong>
-                        <p>Pay when your order arrives. No advance payment.</p>
-                      </div>
-                    </label>
-
-                    <label
-                      className={`ck-pay-option${paymentMethod === "razorpay" ? " selected" : ""}`}
-                    >
+                    <label className="ck-pay-option selected">
                       <input
                         type="radio"
                         name="payment"
                         value="razorpay"
-                        checked={paymentMethod === "razorpay"}
-                        onChange={() => setPaymentMethod("razorpay")}
+                        checked
+                        readOnly
                       />
                       <div>
                         <strong>UPI / Cards / Netbanking</strong>
@@ -737,14 +714,10 @@ export default function Checkout() {
                       {submitting ? (
                         <>
                           <i className="fas fa-spinner fa-spin" aria-hidden="true"></i>
-                          {paymentMethod === "razorpay"
-                            ? "Processing payment…"
-                            : "Placing order…"}
+                          Processing payment…
                         </>
-                      ) : paymentMethod === "razorpay" ? (
-                        <>Pay · {formatPrice(total)}</>
                       ) : (
-                        <>Place order · {formatPrice(total)}</>
+                        <>Pay · {formatPrice(total)}</>
                       )}
                     </button>
                     <Link to="/cart" className="ck-btn ck-btn-secondary">

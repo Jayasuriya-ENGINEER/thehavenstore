@@ -130,7 +130,7 @@ export default function BulkOrdersPage() {
                     <button
                       type="button"
                       key={p.name}
-                      className={`bulk-product-card reveal ${p.delay}${
+                      className={`bulk-product-card${
                         isSelected ? " is-selected" : ""
                       }`}
                       onClick={() => handleProductSelect(p)}
@@ -184,7 +184,7 @@ export default function BulkOrdersPage() {
                 <div className="bulk-enquiry-alt">
                   <span>Prefer chat?</span>
                   <a
-                    href="https://wa.me/8376907227"
+                    href="https://wa.me/918376907227"
                     className="btn btn-whatsapp bulk-wa-btn"
                     target="_blank"
                     rel="noreferrer"

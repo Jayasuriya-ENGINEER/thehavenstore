@@ -15,7 +15,7 @@ import {
 const ORDERS = "orders";
 
 export const FREE_SHIPPING_THRESHOLD = 999;
-export const FLAT_SHIPPING_FEE = 0;
+export const FLAT_SHIPPING_FEE = 20;
 /** Max days from order date to expected delivery. */
 export const EXPECTED_DELIVERY_DAYS = 8;
 

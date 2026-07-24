@@ -5,11 +5,11 @@ import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
 import About from "./components/About";
 import WhyChooseUs from "./components/WhyChooseUs";
-import Products from "./components/Products";
+
 import BulkOrders from "./components/BulkOrders";
 import EnquiryForm from "./components/EnquiryForm";
 import Testimonials from "./components/Testimonials";
-import Portfolio from "./components/Portfolio";
+
 import Contact from "./components/Contact";
 import Footer from "./components/Footer";
 import FloatingButtons from "./components/FloatingButtons";
@@ -27,6 +27,10 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminRoute from "./components/AdminRoute";
 import BulkOrdersPage from "./pages/BulkOrdersPage";
 
+
+//just removed the <products /> component from the home page because it was not needed as per the new design.
+//and also removed the <portfolio /> component from the home page because it was not needed as per the new design.
+
 function HomePage() {
   useScrollReveal();
 
@@ -36,11 +40,11 @@ function HomePage() {
       <Hero />
       <About />
       <WhyChooseUs />
-      <Products />
+      
       <BulkOrders />
       <EnquiryForm />
       <Testimonials />
-      <Portfolio />
+    
       <Contact />
       <Footer />
       <FloatingButtons />

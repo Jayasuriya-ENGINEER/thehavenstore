@@ -205,12 +205,7 @@ export default function Collection({ sectionKey }) {
                         )}
                       </span>
                       <h3>{product.name}</h3>
-                      <div className="shop-card-rating">
-                        <i className="fas fa-star" aria-hidden="true"></i>
-                        <span>
-                          {product.rating || "—"} ({product.reviews || 0})
-                        </span>
-                      </div>
+                      
                       <div className="shop-card-price">
                         <span className="current">
                           {formatPrice(product.price)}

@@ -44,8 +44,8 @@ export function normalizeProduct(id, data = {}) {
     originalPrice: Number(data.originalPrice) || Number(data.price) || 0,
     stock: Number.isFinite(stock) ? stock : 0,
     amount: Number.isFinite(stock) ? stock : 0, // alias for admin UI
-    rating: Number(data.rating) || 0,
-    reviews: Number(data.reviews) || 0,
+ //   rating: Number(data.rating) || 0, removed the rating field because it was not needed as per the new design.
+  //  reviews: Number(data.reviews) || 0, also the reviews field was removed because it was not needed as per the new design.
     badge: data.badge || null,
     colors: Array.isArray(data.colors) ? data.colors : [],
     sizes: Array.isArray(data.sizes) ? data.sizes : [],

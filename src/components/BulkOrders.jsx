@@ -37,7 +37,7 @@ export default function BulkOrders() {
             </div>
             <div className="buttongap">
               <a
-                href="https://wa.me/8376907227"
+                href="https://wa.me/918376907227"
                 className="btn btn-whatsapp"
                 target="_blank"
                 rel="noreferrer"

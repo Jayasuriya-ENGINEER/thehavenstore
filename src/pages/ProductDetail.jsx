@@ -274,25 +274,7 @@ export default function ProductDetail() {
               </span>
               <h1>{product.name}</h1>
 
-              <div className="pd-rating-row">
-                <span className="pd-stars" aria-hidden="true">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <i
-                      key={i}
-                      className={
-                        i < fullStars
-                          ? "fas fa-star"
-                          : i === fullStars && hasHalf
-                            ? "fas fa-star-half-alt"
-                            : "far fa-star"
-                      }
-                    ></i>
-                  ))}
-                </span>
-                <span>
-                  {product.rating || 0} · {product.reviews || 0} reviews
-                </span>
-              </div>
+        
 
               <div className="pd-price-block">
                 <span className="pd-price">{formatPrice(product.price)}</span>
