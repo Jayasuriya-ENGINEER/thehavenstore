@@ -14,7 +14,6 @@ import {
   doc,
   getDoc,
   setDoc,
-  updateDoc,
   isAdminEmail,
 } from "../firebase/config";
 
@@ -45,16 +44,8 @@ function mapAuthError(error) {
 async function ensureUserDocument(user, extra = {}) {
   const userRef = doc(db, "users", user.uid);
   const userDoc = await getDoc(userRef);
-  const admin = isAdminEmail(user.email);
-
   if (userDoc.exists()) {
-    const data = userDoc.data();
-    // Keep admin emails elevated even if doc was created earlier as "user"
-    if (admin && data.role !== "admin") {
-      await updateDoc(userRef, { role: "admin" });
-      return { ...data, role: "admin" };
-    }
-    return data;
+    return userDoc.data();
   }
 
   const newUserData = {
@@ -66,13 +57,13 @@ async function ensureUserDocument(user, extra = {}) {
       user.email?.split("@")[0] ||
       "Customer",
     createdAt: new Date().toISOString(),
-    role: admin ? "admin" : "user",
+    // Firestore data is never used as the source of admin authority. The
+    // Firestore rules and isAdmin below use the signed-in Firebase Auth email.
+    role: "user",
     cart: [],
     orders: [],
     wishlist: [],
     ...extra,
-    // Ensure admin flag wins over accidental extra.role
-    ...(admin ? { role: "admin" } : {}),
   };
 
   await setDoc(userRef, newUserData);
@@ -177,9 +168,8 @@ export function AuthProvider({ children }) {
 
   const isAdmin = useMemo(() => {
     if (!currentUser) return false;
-    if (userData?.role === "admin") return true;
     return isAdminEmail(currentUser.email);
-  }, [currentUser, userData]);
+  }, [currentUser]);
 
   const value = {
     currentUser,

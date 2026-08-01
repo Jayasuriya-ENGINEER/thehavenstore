@@ -1,0 +1,139 @@
+/* Section banner slideshow — Men / Women / Accessories */
+
+.section-banner {
+  position: relative;
+  width: 100%;
+  margin-bottom: 0;
+  overflow: hidden;
+  background: #111;
+  aspect-ratio: 24 / 6;
+  max-height: 300px;
+  min-height: 0;
+}
+
+.section-banner-track {
+  position: absolute;
+  inset: 0;
+}
+
+.section-banner-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.7s ease;
+  pointer-events: none;
+}
+
+.section-banner-slide.active {
+  opacity: 1;
+  pointer-events: auto;
+  z-index: 1;
+}
+
+.section-banner-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  user-select: none;
+}
+
+.section-banner-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3;
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  transition: background 0.2s ease, opacity 0.2s ease;
+  opacity: 0;
+}
+
+.section-banner:hover .section-banner-nav,
+.section-banner:focus-within .section-banner-nav {
+  opacity: 1;
+}
+
+.section-banner-nav:hover {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.section-banner-nav.prev {
+  left: 14px;
+}
+
+.section-banner-nav.next {
+  right: 14px;
+}
+
+.section-banner-dots {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  display: flex;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.section-banner-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: none;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.45);
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.section-banner-dot:hover {
+  background: rgba(255, 255, 255, 0.75);
+}
+
+.section-banner-dot.active {
+  background: #fff;
+  transform: scale(1.2);
+}
+
+@media (max-width: 768px) {
+  .section-banner {
+    width: calc(100% - 24px);
+    margin: 0 12px;
+    aspect-ratio: 16 / 7;
+    max-height: 180px;
+    border-radius: 10px;
+  }
+
+  .section-banner-nav {
+    width: 36px;
+    height: 36px;
+    opacity: 0.85;
+  }
+
+  .section-banner-nav.prev {
+    left: 8px;
+  }
+
+  .section-banner-nav.next {
+    right: 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .section-banner-slide {
+    transition: none;
+  }
+}

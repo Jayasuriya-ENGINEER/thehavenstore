@@ -1,0 +1,162 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Assumed data model:
+    // products: admin-managed catalogue with public active products.
+    // sectionBanners: admin-managed public image lists for men, women and accessories.
+    // users: private customer profile (email, address, cart and order summaries).
+    // orders: private order and payment data owned by `userId`.
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // This must match the Firebase Auth account used to access /admin.
+    // It deliberately does not read users.role: a client must never be able
+    // to make itself an admin by changing a Firestore document.
+    function isAdmin() {
+      return signedIn() && request.auth.token.email == 'havenweb26@gmail.com';
+    }
+
+    function isShortString(value, maxLength) {
+      return value is string && value.size() <= maxLength;
+    }
+
+    function isValidProduct(data) {
+      return data.keys().hasOnly([
+          'name', 'category', 'gender', 'price', 'originalPrice', 'stock',
+          'amount', 'rating', 'reviews', 'badge', 'colors', 'sizes', 'images',
+          'imagePaths', 'shortDesc', 'description', 'details', 'inStock',
+          'active', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasAll([
+          'name', 'category', 'gender', 'price', 'originalPrice', 'stock',
+          'amount', 'colors', 'sizes', 'images', 'imagePaths', 'details',
+          'inStock', 'active', 'updatedAt'
+        ]) &&
+        isShortString(data.name, 160) &&
+        isShortString(data.category, 80) &&
+        data.gender in ['men', 'women', 'unisex', 'accessories'] &&
+        data.price is number && data.price >= 0 && data.price <= 1000000 &&
+        data.originalPrice is number && data.originalPrice >= 0 && data.originalPrice <= 1000000 &&
+        data.stock is number && data.stock >= 0 && data.stock <= 1000000 &&
+        data.amount is number && data.amount >= 0 && data.amount <= 1000000 &&
+        (!('rating' in data) || (data.rating is number && data.rating >= 0 && data.rating <= 5)) &&
+        (!('reviews' in data) || (data.reviews is number && data.reviews >= 0 && data.reviews <= 1000000)) &&
+        (!('badge' in data) || data.badge == null || isShortString(data.badge, 40)) &&
+        data.colors is list && data.colors.size() <= 20 &&
+        data.sizes is list && data.sizes.size() <= 20 &&
+        data.images is list && data.images.size() <= 12 &&
+        data.imagePaths is list && data.imagePaths.size() <= 12 &&
+        data.details is list && data.details.size() <= 30 &&
+        (!('shortDesc' in data) || isShortString(data.shortDesc, 300)) &&
+        (!('description' in data) || isShortString(data.description, 5000)) &&
+        data.inStock is bool && data.active is bool &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidBanner(data) {
+      return data.keys().hasOnly(['images', 'updatedAt']) &&
+        data.keys().hasAll(['images', 'updatedAt']) &&
+        data.images is list && data.images.size() <= 20 &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasOnly([
+          'uid', 'email', 'displayName', 'createdAt', 'role', 'cart', 'orders',
+          'wishlist', 'addresses', 'phone', 'defaultAddressId', 'updatedAt'
+        ]) &&
+        data.keys().hasAll(['uid', 'email', 'displayName', 'createdAt', 'role', 'cart', 'orders', 'wishlist']) &&
+        data.uid is string && data.uid == request.auth.uid &&
+        isShortString(data.email, 320) &&
+        isShortString(data.displayName, 100) &&
+        data.createdAt is string && data.createdAt.size() <= 40 &&
+        data.role in ['user', 'admin'] &&
+        data.cart is list && data.cart.size() <= 100 &&
+        data.orders is list && data.orders.size() <= 50 &&
+        data.wishlist is list && data.wishlist.size() <= 100 &&
+        (!('addresses' in data) || (data.addresses is list && data.addresses.size() <= 20)) &&
+        (!('phone' in data) || isShortString(data.phone, 20)) &&
+        (!('defaultAddressId' in data) || isShortString(data.defaultAddressId, 100)) &&
+        (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 40));
+    }
+
+    function isValidOrder(data) {
+      return data.keys().hasOnly([
+          'userId', 'items', 'itemCount', 'shippingAddress', 'contact', 'subtotal',
+          'mrpTotal', 'discount', 'shipping', 'total', 'currency', 'paymentMethod',
+          'paymentStatus', 'razorpayOrderId', 'razorpayPaymentId', 'razorpaySignature',
+          'orderStatus', 'notes', 'expectedDeliveryAt', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasAll([
+          'userId', 'items', 'itemCount', 'shippingAddress', 'contact', 'subtotal',
+          'mrpTotal', 'discount', 'shipping', 'total', 'currency', 'paymentMethod',
+          'paymentStatus', 'orderStatus', 'createdAt', 'updatedAt'
+        ]) &&
+        data.userId == request.auth.uid &&
+        data.items is list && data.items.size() > 0 && data.items.size() <= 50 &&
+        data.itemCount is number && data.itemCount > 0 && data.itemCount <= 100 &&
+        data.shippingAddress is map && data.contact is map &&
+        data.subtotal is number && data.subtotal >= 0 &&
+        data.mrpTotal is number && data.mrpTotal >= 0 &&
+        data.discount is number && data.discount >= 0 &&
+        data.shipping is number && data.shipping >= 0 &&
+        data.total is number && data.total >= 0 &&
+        data.currency == 'INR' &&
+        data.paymentMethod in ['cod', 'razorpay'] &&
+        data.paymentStatus in ['pending', 'paid'] &&
+        data.orderStatus == 'placed' &&
+        isShortString(data.notes, 1000) &&
+        data.expectedDeliveryAt is string && data.expectedDeliveryAt.size() <= 40 &&
+        data.createdAt is timestamp && data.updatedAt is timestamp;
+    }
+
+    match /products/{productId} {
+      allow get, list: if resource.data.active == true || isAdmin();
+      allow create: if isAdmin() && isValidProduct(request.resource.data) &&
+        request.resource.data.createdAt is timestamp;
+      allow update: if isAdmin() && isValidProduct(request.resource.data) &&
+        request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isAdmin();
+    }
+
+    match /sectionBanners/{section} {
+      allow read: if section in ['men', 'women', 'accessories'];
+      allow create, update: if isAdmin() &&
+        section in ['men', 'women', 'accessories'] && isValidBanner(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    // One public, admin-managed image used by the home-page popup.
+    match /siteContent/homePopup {
+      allow read: if true;
+      allow create, update: if isAdmin() &&
+        request.resource.data.keys().hasOnly(['url', 'path', 'updatedAt']) &&
+        request.resource.data.keys().hasAll(['url', 'path', 'updatedAt']) &&
+        isShortString(request.resource.data.url, 2000) &&
+        isShortString(request.resource.data.path, 500) &&
+        request.resource.data.updatedAt is timestamp;
+      allow delete: if isAdmin();
+    }
+
+    match /users/{userId} {
+      allow read: if signedIn() && (request.auth.uid == userId || isAdmin());
+      allow create: if signedIn() && request.auth.uid == userId &&
+        isValidUser(request.resource.data) && request.resource.data.role == 'user';
+      allow update: if isAdmin() ||
+        (signedIn() && request.auth.uid == userId && isValidUser(request.resource.data) &&
+          request.resource.data.uid == resource.data.uid &&
+          request.resource.data.email == resource.data.email &&
+          request.resource.data.role == resource.data.role &&
+          request.resource.data.createdAt == resource.data.createdAt);
+      allow delete: if isAdmin();
+    }
+
+    match /orders/{orderId} {
+      allow create: if signedIn() && isValidOrder(request.resource.data);
+      allow read: if signedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow update, delete: if isAdmin();
+    }
+  }
+}

@@ -154,6 +154,13 @@ export default function Checkout() {
       return;
     }
 
+    // Orders contain delivery and payment data. Require a Firebase Auth user
+    // so Firestore can store each order privately under its owner.
+    if (!currentUser?.uid) {
+      setSubmitError("Please sign in before placing an order.");
+      return;
+    }
+
     // Prefer form fields so user can tweak even when a saved address is selected
     const shippingAddress = usingSaved
       ? { ...activeAddress, ...form, id: activeAddress.id }

@@ -614,6 +614,225 @@
   margin-bottom: 10px;
 }
 
+/* ── Section banners panel ── */
+.admin-banners-panel {
+  background: var(--color-white);
+  border: 1px solid var(--color-grey);
+  border-radius: var(--radius-md);
+  padding: 22px 24px 24px;
+  margin-bottom: 28px;
+  box-shadow: var(--shadow-sm);
+}
+
+.admin-banners-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.admin-banners-header h2 {
+  font-size: 1.2rem;
+  margin-bottom: 4px;
+}
+
+.admin-banners-header p {
+  font-size: 0.88rem;
+  color: #777;
+  max-width: 520px;
+  line-height: 1.45;
+}
+
+.admin-banner-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.admin-banner-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border: 1px solid var(--color-grey);
+  border-radius: 999px;
+  background: var(--color-white);
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: #444;
+  transition: var(--transition-fast);
+}
+
+.admin-banner-tab:hover {
+  border-color: var(--color-black);
+}
+
+.admin-banner-tab.active {
+  background: var(--color-black);
+  border-color: var(--color-black);
+  color: #fff;
+}
+
+.admin-banner-tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.admin-banner-tab.active .admin-banner-tab-count {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.admin-banner-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.admin-popup-banner-body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 16px;
+}
+
+.admin-popup-banner-preview {
+  position: relative;
+  width: min(100%, 220px);
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border: 1px solid var(--color-grey);
+  border-radius: 12px;
+  background: var(--color-light-grey);
+}
+
+.admin-popup-banner-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.admin-popup-banner-preview .admin-btn {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+}
+
+.admin-banner-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.admin-banner-card {
+  position: relative;
+  aspect-ratio: 16 / 7;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--color-light-grey);
+  border: 1px solid var(--color-grey);
+}
+
+.admin-banner-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.admin-banner-card-actions {
+  position: absolute;
+  inset: auto 0 0 0;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.65));
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.admin-banner-card:hover .admin-banner-card-actions,
+.admin-banner-card:focus-within .admin-banner-card-actions {
+  opacity: 1;
+}
+
+.admin-banner-order {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.admin-banner-upload {
+  aspect-ratio: 16 / 7;
+  border: 2px dashed var(--color-grey);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  color: #888;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+  padding: 12px;
+  transition: var(--transition-fast);
+  background: #fafafa;
+}
+
+.admin-banner-upload:hover {
+  border-color: var(--color-black);
+  color: var(--color-black);
+}
+
+.admin-banner-upload.is-busy {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.admin-banner-upload input {
+  display: none;
+}
+
+.admin-banner-upload i {
+  font-size: 1.35rem;
+}
+
+.admin-banner-empty-hint {
+  font-size: 0.88rem;
+  color: #888;
+  margin: 0;
+}
+
+.admin-section-divider {
+  margin: 8px 0 18px;
+}
+
+.admin-section-divider h2 {
+  font-size: 1.2rem;
+  margin: 0;
+}
+
 @media (max-width: 768px) {
   .admin-form-grid {
     grid-template-columns: 1fr;
@@ -629,5 +848,13 @@
 
   .admin-header {
     padding: 28px 0 32px;
+  }
+
+  .admin-banners-panel {
+    padding: 18px 16px 20px;
+  }
+
+  .admin-banner-card-actions {
+    opacity: 1;
   }
 }

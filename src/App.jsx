@@ -13,6 +13,7 @@ import Testimonials from "./components/Testimonials";
 import Contact from "./components/Contact";
 import Footer from "./components/Footer";
 import FloatingButtons from "./components/FloatingButtons";
+import HomePopupBanner from "./components/HomePopupBanner";
 import useScrollReveal from "./hooks/useScrollReveal";
 import Login from "./auth/Login";
 import Signup from "./auth/Signup";
@@ -37,6 +38,7 @@ function HomePage() {
   return (
     <>
       <Navbar />
+      <HomePopupBanner />
       <Hero />
       <About />
       <WhyChooseUs />

@@ -5,7 +5,8 @@
 .shop-page {
   min-height: 100vh;
   background: var(--color-white);
-  padding-top: 100px;
+  /* Matches the solid navbar height, so banners sit directly beneath it. */
+  padding-top: 77px;
 }
 
 .shop-page.shop-detail {
@@ -24,6 +25,16 @@
   margin-bottom: 40px;
   position: relative;
   overflow: hidden;
+}
+
+/* When a section banner slideshow is present, tighten hero top spacing */
+.shop-page > .section-banner + .shop-hero {
+  margin-top: 0;
+}
+
+/* Separate the section banner from the product count, filters and grid. */
+.shop-page > .section-banner + .container {
+  padding-top: 36px;
 }
 
 .shop-hero::before {
@@ -831,12 +842,16 @@
 
 @media (max-width: 768px) {
   .shop-page {
-    padding-top: 88px;
+    padding-top: 77px;
   }
 
   .shop-hero {
     padding: 36px 0 40px;
     margin-bottom: 28px;
+  }
+
+  .shop-page > .section-banner + .container {
+    padding-top: 24px;
   }
 
   .shop-grid {

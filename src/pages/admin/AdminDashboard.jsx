@@ -8,6 +8,16 @@ import {
   deleteProduct,
   uploadProductImage,
 } from "../../services/products";
+import {
+  BANNER_SECTIONS,
+  fetchAllSectionBanners,
+  addBannerImages,
+  removeBannerImage,
+  saveSectionBanners,
+  fetchHomePopupBanner,
+  replaceHomePopupBanner,
+  removeHomePopupBanner,
+} from "../../services/banners";
 import { formatPrice } from "../../data/mensProducts";
 import "./Admin.css";
 
@@ -86,6 +96,20 @@ export default function AdminDashboard() {
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(emptyForm());
 
+  // Section banners (Men / Women / Accessories)
+  const [bannerSection, setBannerSection] = useState("men");
+  const [bannersBySection, setBannersBySection] = useState({
+    men: { images: [] },
+    women: { images: [] },
+    accessories: { images: [] },
+  });
+  const [bannersLoading, setBannersLoading] = useState(true);
+  const [bannerUploading, setBannerUploading] = useState(false);
+  const [bannerError, setBannerError] = useState("");
+  const [popupBanner, setPopupBanner] = useState(null);
+  const [popupLoading, setPopupLoading] = useState(true);
+  const [popupUploading, setPopupUploading] = useState(false);
+
   const loadProducts = useCallback(async () => {
     setLoading(true);
     setError("");
@@ -103,9 +127,46 @@ export default function AdminDashboard() {
     }
   }, []);
 
+  const loadBanners = useCallback(async () => {
+    setBannersLoading(true);
+    setBannerError("");
+    try {
+      const all = await fetchAllSectionBanners();
+      setBannersBySection(all);
+    } catch (err) {
+      console.error(err);
+      setBannerError(
+        err?.message ||
+          "Could not load banners. Check Firebase rules and that Storage is enabled.",
+      );
+    } finally {
+      setBannersLoading(false);
+    }
+  }, []);
+
+  const loadPopupBanner = useCallback(async () => {
+    setPopupLoading(true);
+    try {
+      setPopupBanner(await fetchHomePopupBanner());
+    } catch (err) {
+      console.error(err);
+      setBannerError(err?.message || "Could not load the home popup banner.");
+    } finally {
+      setPopupLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     loadProducts();
   }, [loadProducts]);
+
+  useEffect(() => {
+    loadBanners();
+  }, [loadBanners]);
+
+  useEffect(() => {
+    loadPopupBanner();
+  }, [loadPopupBanner]);
 
   useEffect(() => {
     if (!success) return;
@@ -313,6 +374,117 @@ export default function AdminDashboard() {
     }
   };
 
+  const currentBanners = bannersBySection[bannerSection]?.images || [];
+
+  const handleBannerUpload = async (e) => {
+    const files = Array.from(e.target.files || []);
+    e.target.value = "";
+    if (!files.length) return;
+
+    setBannerUploading(true);
+    setBannerError("");
+    try {
+      const updated = await addBannerImages(bannerSection, files);
+      setBannersBySection((prev) => ({
+        ...prev,
+        [bannerSection]: updated,
+      }));
+      const label =
+        BANNER_SECTIONS.find((s) => s.key === bannerSection)?.label ||
+        bannerSection;
+      setSuccess(`Banner(s) added for ${label}.`);
+    } catch (err) {
+      console.error(err);
+      setBannerError(
+        err?.message ||
+          "Banner upload failed. Enable Firebase Storage and allow authenticated uploads.",
+      );
+    } finally {
+      setBannerUploading(false);
+    }
+  };
+
+  const handlePopupUpload = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    setPopupUploading(true);
+    setBannerError("");
+    try {
+      setPopupBanner(await replaceHomePopupBanner(file));
+      setSuccess("Home popup banner saved.");
+    } catch (err) {
+      console.error(err);
+      setBannerError(err?.message || "Could not upload the home popup banner.");
+    } finally {
+      setPopupUploading(false);
+    }
+  };
+
+  const handlePopupRemove = async () => {
+    if (!popupBanner || !window.confirm("Remove the home popup banner?")) return;
+    setPopupUploading(true);
+    setBannerError("");
+    try {
+      await removeHomePopupBanner();
+      setPopupBanner(null);
+      setSuccess("Home popup banner removed.");
+    } catch (err) {
+      console.error(err);
+      setBannerError(err?.message || "Could not remove the home popup banner.");
+    } finally {
+      setPopupUploading(false);
+    }
+  };
+
+  const handleBannerRemove = async (imageId) => {
+    if (!imageId) return;
+    const ok = window.confirm("Remove this banner image?");
+    if (!ok) return;
+
+    setBannerError("");
+    try {
+      const updated = await removeBannerImage(bannerSection, imageId);
+      setBannersBySection((prev) => ({
+        ...prev,
+        [bannerSection]: updated,
+      }));
+      setSuccess("Banner removed.");
+    } catch (err) {
+      console.error(err);
+      setBannerError(err?.message || "Could not remove banner.");
+    }
+  };
+
+  const moveBanner = async (fromIndex, direction) => {
+    const images = [...currentBanners];
+    const toIndex = fromIndex + direction;
+    if (toIndex < 0 || toIndex >= images.length) return;
+
+    const tmp = images[fromIndex];
+    images[fromIndex] = images[toIndex];
+    images[toIndex] = tmp;
+
+    // Optimistic UI
+    setBannersBySection((prev) => ({
+      ...prev,
+      [bannerSection]: { ...prev[bannerSection], images },
+    }));
+
+    try {
+      const updated = await saveSectionBanners(bannerSection, images);
+      setBannersBySection((prev) => ({
+        ...prev,
+        [bannerSection]: updated,
+      }));
+    } catch (err) {
+      console.error(err);
+      setBannerError(err?.message || "Could not reorder banners.");
+      await loadBanners();
+    }
+  };
+
   return (
     <>
       <Navbar solid />
@@ -322,8 +494,9 @@ export default function AdminDashboard() {
             <div>
               <h1>Admin dashboard</h1>
               <p>
-                Manage products — photos, price, sizes, colors, stock amount,
-                and visibility.
+                Manage products and section banners — photos, price, sizes,
+                colors, stock, and slideshow images for Men, Women, and
+                Accessories.
               </p>
             </div>
             <div className="admin-header-actions">
@@ -374,6 +547,184 @@ export default function AdminDashboard() {
               <span>{success}</span>
             </div>
           )}
+
+          <section className="admin-banners-panel" aria-labelledby="admin-popup-title">
+            <div className="admin-banners-header">
+              <div>
+                <h2 id="admin-popup-title">Home popup banner</h2>
+                <p>
+                  Shown once per visitor session on the home page. Clicking it takes the visitor to the Men&apos;s section.
+                </p>
+              </div>
+            </div>
+            <div className="admin-popup-banner-body">
+              {popupLoading ? (
+                <p className="admin-banner-empty-hint">Loading popup banner…</p>
+              ) : popupBanner ? (
+                <div className="admin-popup-banner-preview">
+                  <img src={popupBanner.url} alt="Current home popup banner" />
+                  <button
+                    type="button"
+                    className="admin-btn admin-btn-danger admin-btn-sm"
+                    onClick={handlePopupRemove}
+                    disabled={popupUploading}
+                  >
+                    <i className="fas fa-trash" aria-hidden="true"></i>
+                    Remove popup
+                  </button>
+                </div>
+              ) : (
+                <p className="admin-banner-empty-hint">No home popup is active.</p>
+              )}
+              <label className={`admin-banner-upload${popupUploading ? " is-busy" : ""}`}>
+                <i className="fas fa-image" aria-hidden="true"></i>
+                <span>{popupUploading ? "Uploading…" : popupBanner ? "Replace popup banner" : "Upload popup banner"}</span>
+                <span className="admin-field-hint">
+                  Recommended size: 1080 × 1350 px (4:5). This format fits desktop and mobile screens well.
+                </span>
+                <input type="file" accept="image/*" disabled={popupUploading} onChange={handlePopupUpload} />
+              </label>
+            </div>
+          </section>
+
+          {/* ── Section banners ── */}
+          <section className="admin-banners-panel" aria-labelledby="admin-banners-title">
+            <div className="admin-banners-header">
+              <div>
+                <h2 id="admin-banners-title">Section banners</h2>
+                <p>
+                  Upload different slideshow images for Men, Women, and
+                  Accessories. They auto-scroll in a loop at the top of each
+                  section.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="admin-btn admin-btn-secondary admin-btn-sm"
+                onClick={loadBanners}
+                disabled={bannersLoading || bannerUploading}
+              >
+                <i className="fas fa-rotate" aria-hidden="true"></i>
+                Refresh banners
+              </button>
+            </div>
+
+            <div className="admin-banner-tabs" role="tablist" aria-label="Banner section">
+              {BANNER_SECTIONS.map(({ key, label }) => {
+                const count = bannersBySection[key]?.images?.length || 0;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    role="tab"
+                    aria-selected={bannerSection === key}
+                    className={`admin-banner-tab${
+                      bannerSection === key ? " active" : ""
+                    }`}
+                    onClick={() => {
+                      setBannerSection(key);
+                      setBannerError("");
+                    }}
+                  >
+                    {label}
+                    <span className="admin-banner-tab-count">{count}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {bannerError && (
+              <div className="admin-alert admin-alert-error" role="alert">
+                <i className="fas fa-circle-exclamation" aria-hidden="true"></i>
+                <span>{bannerError}</span>
+              </div>
+            )}
+
+            {bannersLoading ? (
+              <div className="admin-loading" style={{ padding: "32px 20px" }}>
+                <i className="fas fa-spinner fa-spin" aria-hidden="true"></i>
+                <p>Loading banners…</p>
+              </div>
+            ) : (
+              <div className="admin-banner-body">
+                <div className="admin-banner-grid">
+                  {currentBanners.map((img, index) => (
+                    <div className="admin-banner-card" key={img.id || index}>
+                      <img src={img.url} alt={`Banner ${index + 1}`} />
+                      <div className="admin-banner-card-actions">
+                        <button
+                          type="button"
+                          className="admin-btn admin-btn-secondary admin-btn-sm"
+                          onClick={() => moveBanner(index, -1)}
+                          disabled={index === 0 || bannerUploading}
+                          aria-label="Move earlier"
+                          title="Move left"
+                        >
+                          <i className="fas fa-arrow-left" aria-hidden="true"></i>
+                        </button>
+                        <button
+                          type="button"
+                          className="admin-btn admin-btn-secondary admin-btn-sm"
+                          onClick={() => moveBanner(index, 1)}
+                          disabled={
+                            index === currentBanners.length - 1 || bannerUploading
+                          }
+                          aria-label="Move later"
+                          title="Move right"
+                        >
+                          <i className="fas fa-arrow-right" aria-hidden="true"></i>
+                        </button>
+                        <button
+                          type="button"
+                          className="admin-btn admin-btn-danger admin-btn-sm"
+                          onClick={() => handleBannerRemove(img.id)}
+                          disabled={bannerUploading}
+                          aria-label="Remove banner"
+                        >
+                          <i className="fas fa-trash" aria-hidden="true"></i>
+                        </button>
+                      </div>
+                      <span className="admin-banner-order">#{index + 1}</span>
+                    </div>
+                  ))}
+
+                  <label
+                    className={`admin-banner-upload${
+                      bannerUploading ? " is-busy" : ""
+                    }`}
+                  >
+                    <i className="fas fa-cloud-arrow-up" aria-hidden="true"></i>
+                    <span>
+                      {bannerUploading
+                        ? "Uploading…"
+                        : `Add ${BANNER_SECTIONS.find((s) => s.key === bannerSection)?.label || ""} banners`}
+                    </span>
+                    <span className="admin-field-hint">
+                      JPG / PNG / WebP · wide images work best
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      disabled={bannerUploading}
+                      onChange={handleBannerUpload}
+                    />
+                  </label>
+                </div>
+
+                {currentBanners.length === 0 && (
+                  <p className="admin-banner-empty-hint">
+                    No banners for this section yet. Upload one or more images —
+                    they will slideshow automatically on the shop page.
+                  </p>
+                )}
+              </div>
+            )}
+          </section>
+
+          <div className="admin-section-divider">
+            <h2>Products</h2>
+          </div>
 
           <div className="admin-toolbar">
             <div className="admin-search">

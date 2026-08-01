@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import SectionBannerSlideshow from "../components/SectionBannerSlideshow";
 import {
   mensProducts,
   formatPrice,
@@ -92,17 +93,7 @@ export default function Collection({ sectionKey }) {
     <>
       <Navbar solid />
       <div className="shop-page">
-        <header className="shop-hero">
-          <div className="container shop-hero-inner">
-            <nav className="shop-breadcrumb" aria-label="Breadcrumb">
-              <Link to="/">Home</Link>
-              <span>/</span>
-              <span className="current">{section.breadcrumb}</span>
-            </nav>
-            <h1>{section.title}</h1>
-            <p>{section.description}</p>
-          </div>
-        </header>
+        <SectionBannerSlideshow key={sectionKey} section={sectionKey} />
 
         <div className="container">
           <div className="shop-toolbar">
