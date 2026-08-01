@@ -39,7 +39,55 @@
 .bulk-page-hero-inner {
   position: relative;
   z-index: 1;
-  max-width: 760px;
+  display: grid;
+  grid-template-columns: minmax(0, 760px) auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 40px;
+}
+
+.bulk-hero-copy {
+  text-align: left;
+}
+
+.bulk-hero-catalogue {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 250px;
+  padding: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.bulk-hero-catalogue > span {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.bulk-catalogue-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 13px 16px;
+  border-radius: 10px;
+  background: var(--color-white);
+  color: var(--color-black);
+  font-family: var(--font-secondary);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.bulk-catalogue-btn:hover {
+  background: #f1f1f1;
+  transform: translateY(-2px);
 }
 
 .bulk-breadcrumb {
@@ -496,6 +544,15 @@
 }
 
 @media (max-width: 992px) {
+  .bulk-page-hero-inner {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .bulk-hero-catalogue {
+    width: min(100%, 360px);
+  }
+
   .bulk-page-layout {
     grid-template-columns: 1fr;
   }
@@ -522,6 +579,10 @@
 @media (max-width: 640px) {
   .bulk-page-hero {
     padding: 108px 0 48px;
+  }
+
+  .bulk-hero-catalogue {
+    width: 100%;
   }
 
   .bulk-products-grid {

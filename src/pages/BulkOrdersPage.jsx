@@ -71,6 +71,7 @@ export default function BulkOrdersPage() {
       {/* Hero */}
       <header className="bulk-page-hero">
         <div className="container bulk-page-hero-inner">
+          <div className="bulk-hero-copy">
           <nav className="bulk-breadcrumb" aria-label="Breadcrumb">
             <Link to="/">Home</Link>
             <span>/</span>
@@ -89,6 +90,20 @@ export default function BulkOrdersPage() {
                 <span>{p.label}</span>
               </div>
             ))}
+          </div>
+          </div>
+          <div className="bulk-hero-catalogue">
+            <span>Browse our styles</span>
+            <a
+              href="/catelog.pdf"
+              className="bulk-catalogue-btn"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <i className="fas fa-file-pdf" aria-hidden="true"></i>
+              View / Download Catalogue
+              <i className="fas fa-arrow-up-right-from-square" aria-hidden="true"></i>
+            </a>
           </div>
         </div>
       </header>
