@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useEffect } from "react";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
 import Navbar from "./components/Navbar";
@@ -27,13 +28,30 @@ import OrderSuccess from "./pages/OrderSuccess";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminRoute from "./components/AdminRoute";
 import BulkOrdersPage from "./pages/BulkOrdersPage";
+import Internships from "./pages/Internships";
+import LegalPage from "./pages/LegalPage";
 
 
 //just removed the <products /> component from the home page because it was not needed as per the new design.
 //and also removed the <portfolio /> component from the home page because it was not needed as per the new design.
 
 function HomePage() {
+  const location = useLocation();
   useScrollReveal();
+
+  useEffect(() => {
+    if (!location.hash) return;
+
+    const frame = requestAnimationFrame(() => {
+      const target = document.querySelector(location.hash);
+      if (!target) return;
+
+      const offset = target.getBoundingClientRect().top + window.pageYOffset - 80;
+      window.scrollTo({ top: offset, behavior: "smooth" });
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [location.hash]);
 
   return (
     <>
@@ -70,6 +88,8 @@ function App() {
             <Route path="/accessories" element={<Accessories />} />
             <Route path="/accessories/:productId" element={<ProductDetail />} />
             <Route path="/bulk-orders" element={<BulkOrdersPage />} />
+            <Route path="/internships" element={<Internships />} />
+            <Route path="/policies/:page" element={<LegalPage />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/order-success/:orderId" element={<OrderSuccess />} />

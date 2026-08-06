@@ -1,6 +1,5 @@
 //const LOGO_SVG_WHITE = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 120'%3E%3Crect x='0' y='20' width='80' height='80' rx='12' fill='white'/%3E%3Ctext x='40' y='72' font-family='Arial' font-weight='bold' font-size='50' fill='%23111111' text-anchor='middle'%3ETH%3C/text%3E%3Ctext x='100' y='72' font-family='Arial' font-weight='bold' font-size='40' fill='white'%3ETHE HAVEN%3C/text%3E%3C/svg%3E`;
-import { Link } from "react-router-dom";
-import logo from  "../assets/logo.png";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 const socials = [
   {
     icon: "fab fa-instagram",
@@ -10,18 +9,18 @@ const socials = [
   {
     icon: "fab fa-linkedin-in",
     label: "LinkedIn",
-    href: "https://www.linkedin.com/company/the-haven-store/about/",
+    href: " https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://in.linkedin.com/company/the-haven-store&ved=2ahUKEwjt34Gz9amVAxWVSWwGHSw9C3wQFnoECCAQAQ&sqi=2&usg=AOvVaw0ulWZEHPoO4YCYXsICZwQ9",
   },
+  /*
   {
     icon: "fab fa-facebook-f",
     label: "Facebook",
     href: "https://facebook.com/yourpage",
-  },
+  },*/
   {
-    icon: "fab fa-discord",
-    color: "#ffffff",
+    icon: "x-twitter",
     label: "Twitter",
-    href: "https://x.com/yourhandle",
+    href: "https://x.com/The_Haven_Store",
   },
   {
     icon: "fab fa-youtube",
@@ -41,11 +40,11 @@ const socials = [
 ];
 
 const quickLinks = [
-  { href: "#home", label: "Home", type: "hash" },
-  { href: "#about", label: "About Us", type: "hash" },
-  { href: "#products", label: "Products", type: "hash" },
-  { href: "/bulk-orders", label: "Bulk Orders", type: "route" },
-  { href: "#testimonials", label: "Testimonials", type: "hash" },
+  { href: "#home", label: "Home" },
+  { href: "#about", label: "About Us" },
+  { href: "#products", label: "Products" },
+  { href: "#bulk-orders", label: "Bulk Orders" },
+  { href: "#testimonials", label: "Testimonials" },
 ];
 
 const services = [
@@ -57,16 +56,16 @@ const services = [
 ];
 
 const policy = [
-  { href: "#", label: "Shipping Policy" },
-  { href: "#", label: "Return Policy" },
-  { href: "#", label: "Privacy Policy" },
-  { href: "#", label: "Terms of Service" },
-  { href: "#", label: "FAQ" },
+  { href: "/policies/shipping-policy", label: "Shipping Policy" },
+  { href: "/policies/return-policy", label: "Return Policy" },
+  { href: "/policies/privacy-policy", label: "Privacy Policy" },
+  { href: "/policies/terms-of-service", label: "Terms of Service" },
+  { href: "/policies/faq", label: "FAQ" },
 ];
 
 const carreer = [
   { href: "#", label: "Campus Ambassadors" },
-  { href: "#", label: "Internships" },
+  { href: "/internships", label: "Internships" },
 ];
 
 const scrollTo = (href) => {
@@ -78,6 +77,20 @@ const scrollTo = (href) => {
 };
 
 export default function Footer() {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleQuickLinkClick = (event, href) => {
+    event.preventDefault();
+
+    if (location.pathname !== "/") {
+      navigate(`/${href}`);
+      return;
+    }
+
+    scrollTo(href);
+  };
+
   return (
     <footer className="footer">
       <div className="container">
@@ -87,19 +100,12 @@ export default function Footer() {
             <ul>
               {quickLinks.map((l) => (
                 <li key={l.label}>
-                  {l.type === "route" ? (
-                    <Link to={l.href}>{l.label}</Link>
-                  ) : (
-                    <a
-                      href={l.href}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        scrollTo(l.href);
-                      }}
-                    >
-                      {l.label}
-                    </a>
-                  )}
+                  <a
+                    href={`/${l.href}`}
+                    onClick={(event) => handleQuickLinkClick(event, l.href)}
+                  >
+                    {l.label}
+                  </a>
                 </li>
               ))}
             </ul>
@@ -110,7 +116,7 @@ export default function Footer() {
             <ul>
               {services.map((s) => (
                 <li key={s}>
-                  <a href="#">{s}</a>
+                  <Link to="/bulk-orders">{s}</Link>
                 </li>
               ))}
             </ul>
@@ -122,7 +128,7 @@ export default function Footer() {
             <ul>
               {policy.map((item) => (
                 <li key={item.label}>
-                  <a href={item.href}>{item.label}</a>
+                  <Link to={item.href}>{item.label}</Link>
                 </li>
               ))}
             </ul>
@@ -134,7 +140,11 @@ export default function Footer() {
             <ul>
               {carreer.map((item) => (
                 <li key={item.label}>
-                  <a href={item.href}>{item.label}</a>
+                  {item.href.startsWith("/") ? (
+                    <Link to={item.href}>{item.label}</Link>
+                  ) : (
+                    <a href={item.href}>{item.label}</a>
+                  )}
                 </li>
               ))}
             </ul>
@@ -168,7 +178,13 @@ export default function Footer() {
               rel="noreferrer"
               aria-label={s.label}
             >
-              <i className={s.icon}></i>
+              {s.icon === "x-twitter" ? (
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231 5.451-6.231Zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77Z" />
+                </svg>
+              ) : (
+                <i className={s.icon}></i>
+              )}
             </a>
           ))}
         </div>

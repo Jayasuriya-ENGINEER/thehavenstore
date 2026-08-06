@@ -1495,6 +1495,18 @@ section {
   gap: 14px;
   margin: 20px 0 35px;
 }
+.footer-social a {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  color: var(--color-white);
+}
+.footer-social svg {
+  width: 17px;
+  height: 17px;
+  fill: currentColor;
+}
 
 /* ============================================
    Animations / Reveal

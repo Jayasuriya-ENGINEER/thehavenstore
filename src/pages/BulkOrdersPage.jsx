@@ -120,6 +120,29 @@ export default function BulkOrdersPage() {
               </div>
             ))}
           </div>
+
+          <aside className="bulk-brochure reveal" aria-label="Download brochure">
+            <div className="bulk-brochure-icon" aria-hidden="true">
+              <i className="fas fa-file-pdf"></i>
+            </div>
+            <div className="bulk-brochure-copy">
+              <span>Planning your order?</span>
+              <h2>Download the product brochure</h2>
+              <p>
+                Explore our apparel range and share your preferred styles with
+                your team before requesting a quote.
+              </p>
+            </div>
+            <a
+              href="/catelog.pdf"
+              className="bulk-brochure-button"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Download brochure
+              <i className="fas fa-arrow-down" aria-hidden="true"></i>
+            </a>
+          </aside>
         </div>
       </section>
 
