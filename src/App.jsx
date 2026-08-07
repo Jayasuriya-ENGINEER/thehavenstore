@@ -61,8 +61,8 @@ function HomePage() {
       <About />
       <WhyChooseUs />
       
-      <BulkOrders />
-      <EnquiryForm />
+
+      
       <Testimonials />
     
       <Contact />
