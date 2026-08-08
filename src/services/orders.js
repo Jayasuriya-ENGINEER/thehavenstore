@@ -21,9 +21,47 @@ export const EXPECTED_DELIVERY_DAYS = 8;
 
 const LOCAL_ORDERS_KEY = "haven_orders_v1";
 
+/** Default store shipping (apparel / items without a custom charge). */
 export function calcShipping(subtotal) {
   if (subtotal <= 0) return 0;
   return subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : FLAT_SHIPPING_FEE;
+}
+
+/**
+ * Shipping for a cart:
+ * - Items with deliveryCharge set (incl. 0) use that admin fee once per line.
+ * - Remaining items use the default free-over-threshold rule on their subtotal.
+ */
+export function calcShippingFromItems(items = [], subtotalFallback = 0) {
+  if (!items.length) return 0;
+
+  let customShipping = 0;
+  let defaultSubtotal = 0;
+  let hasDefaultItems = false;
+  let hasCustomItems = false;
+
+  for (const item of items) {
+    const hasCustom =
+      item.deliveryCharge !== undefined &&
+      item.deliveryCharge !== null &&
+      item.deliveryCharge !== "";
+    if (hasCustom) {
+      hasCustomItems = true;
+      customShipping += Math.max(0, Number(item.deliveryCharge) || 0);
+    } else {
+      hasDefaultItems = true;
+      defaultSubtotal +=
+        (Number(item.price) || 0) * (Number(item.qty) || 0);
+    }
+  }
+
+  let shipping = customShipping;
+  if (hasDefaultItems) {
+    shipping += calcShipping(defaultSubtotal);
+  } else if (!hasCustomItems) {
+    shipping += calcShipping(subtotalFallback);
+  }
+  return shipping;
 }
 
 /** Add N calendar days to a date (or ISO string). Returns Date. */
@@ -139,9 +177,23 @@ export function calcOrderTotals(items) {
     0,
   );
   const discount = Math.max(0, mrpTotal - subtotal);
-  const shipping = calcShipping(subtotal);
+  const shipping = calcShippingFromItems(items, subtotal);
   const total = subtotal + shipping;
   return { subtotal, mrpTotal, discount, shipping, total };
+}
+
+/** Human-readable variant labels for cart / order lines. */
+export function formatItemOptions(item) {
+  if (!item) return "";
+  const parts = [];
+  if (item.selectedOptions && typeof item.selectedOptions === "object") {
+    for (const [key, value] of Object.entries(item.selectedOptions)) {
+      if (value) parts.push(`${key}: ${value}`);
+    }
+  }
+  if (item.size) parts.push(`Size: ${item.size}`);
+  if (item.color) parts.push(`Color: ${item.color}`);
+  return parts.join(" · ");
 }
 
 function normalizeAddress(address = {}) {
@@ -210,6 +262,16 @@ export async function placeOrder({
     image: i.image || "",
     size: i.size || "",
     color: i.color || "",
+    selectedOptions:
+      i.selectedOptions && typeof i.selectedOptions === "object"
+        ? i.selectedOptions
+        : {},
+    deliveryCharge:
+      i.deliveryCharge !== undefined &&
+      i.deliveryCharge !== null &&
+      i.deliveryCharge !== ""
+        ? Math.max(0, Number(i.deliveryCharge) || 0)
+        : null,
     qty: Number(i.qty) || 1,
     gender: i.gender || "",
     category: i.category || "",

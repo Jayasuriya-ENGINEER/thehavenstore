@@ -6,9 +6,10 @@ import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import { formatPrice } from "../data/mensProducts";
 import {
-  calcShipping,
+  calcShippingFromItems,
   FREE_SHIPPING_THRESHOLD,
   fetchOrdersForUser,
+  formatItemOptions,
   formatOrderDate,
   loadLocalOrders,
   mergeOrders,
@@ -24,9 +25,22 @@ export default function Cart() {
   const [orders, setOrders] = useState(() => loadLocalOrders());
   const [ordersLoading, setOrdersLoading] = useState(false);
 
-  const shipping = calcShipping(subtotal);
+  const shipping = calcShippingFromItems(items, subtotal);
   const total = subtotal + shipping;
-  const freeShipLeft = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
+  const defaultItems = items.filter(
+    (i) =>
+      i.deliveryCharge === undefined ||
+      i.deliveryCharge === null ||
+      i.deliveryCharge === "",
+  );
+  const defaultSubtotal = defaultItems.reduce(
+    (sum, i) => sum + (Number(i.price) || 0) * (Number(i.qty) || 0),
+    0,
+  );
+  const showFreeShipPromo = defaultItems.length > 0;
+  const freeShipLeft = showFreeShipPromo
+    ? Math.max(0, FREE_SHIPPING_THRESHOLD - defaultSubtotal)
+    : 0;
 
   useEffect(() => {
     let cancelled = false;
@@ -117,8 +131,12 @@ export default function Cart() {
                               </Link>
                             </h3>
                             <div className="ck-line-meta">
-                              {item.size && <span>Size: {item.size}</span>}
-                              {item.color && <span>Color: {item.color}</span>}
+                              {formatItemOptions(item)
+                                .split(" · ")
+                                .filter(Boolean)
+                                .map((label) => (
+                                  <span key={label}>{label}</span>
+                                ))}
                               {item.category && <span>{item.category}</span>}
                             </div>
                             <div className="ck-line-actions">
@@ -246,10 +264,12 @@ export default function Cart() {
                                     )}
                                   </h3>
                                   <div className="ck-line-meta">
-                                    {item.size && <span>Size: {item.size}</span>}
-                                    {item.color && (
-                                      <span>Color: {item.color}</span>
-                                    )}
+                                    {formatItemOptions(item)
+                                      .split(" · ")
+                                      .filter(Boolean)
+                                      .map((label) => (
+                                        <span key={label}>{label}</span>
+                                      ))}
                                     {item.category && (
                                       <span>{item.category}</span>
                                     )}
@@ -289,14 +309,16 @@ export default function Cart() {
                       Prices include taxes where applicable
                     </p>
 
-                    {freeShipLeft > 0 ? (
+                    {showFreeShipPromo && freeShipLeft > 0 && (
                       <div className="ck-ship-note">
-                        Add {formatPrice(freeShipLeft)} more for free shipping
+                        Add {formatPrice(freeShipLeft)} more for free shipping on
+                        apparel
                       </div>
-                    ) : (
+                    )}
+                    {showFreeShipPromo && freeShipLeft <= 0 && (
                       <div className="ck-free-ship">
                         <i className="fas fa-truck" aria-hidden="true"></i>
-                        You get free shipping on this order
+                        Free shipping on apparel items
                       </div>
                     )}
 

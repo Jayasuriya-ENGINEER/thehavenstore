@@ -31,8 +31,10 @@ export default function ProductDetail() {
   const [activeImage, setActiveImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedColor, setSelectedColor] = useState("");
+  const [selectedOptions, setSelectedOptions] = useState({});
   const [qty, setQty] = useState(1);
   const [sizeError, setSizeError] = useState(false);
+  const [optionError, setOptionError] = useState("");
   const [toast, setToast] = useState("");
 
   // Prefer URL section so unisex products keep men/women context
@@ -49,8 +51,10 @@ export default function ProductDetail() {
       setLoading(true);
       setActiveImage(0);
       setSelectedSize("");
+      setSelectedOptions({});
       setQty(1);
       setSizeError(false);
+      setOptionError("");
       setToast("");
 
       try {
@@ -62,6 +66,16 @@ export default function ProductDetail() {
         if (cancelled) return;
         setProduct(found || null);
         setSelectedColor(found?.colors?.[0]?.name || "");
+        // Pre-select first value for each custom option group when present
+        if (found?.customOptions?.length) {
+          const initial = {};
+          for (const field of found.customOptions) {
+            if (field?.name && field.values?.[0]) {
+              initial[field.name] = field.values[0];
+            }
+          }
+          setSelectedOptions(initial);
+        }
 
         if (found) {
           // Related pool: current shop section when on /men|/women|/accessories
@@ -135,6 +149,8 @@ export default function ProductDetail() {
   const showToast = (msg) => setToast(msg);
 
   const needsSize = (product?.sizes?.length || 0) > 0;
+  const customFields = product?.customOptions || [];
+  const needsCustomOptions = customFields.length > 0;
 
   const requireSize = () => {
     if (!needsSize) {
@@ -149,23 +165,49 @@ export default function ProductDetail() {
     return true;
   };
 
+  const requireCustomOptions = () => {
+    if (!needsCustomOptions) {
+      setOptionError("");
+      return true;
+    }
+    for (const field of customFields) {
+      if (!selectedOptions[field.name]) {
+        setOptionError(`Please select a ${field.name}`);
+        return false;
+      }
+    }
+    setOptionError("");
+    return true;
+  };
+
+  const selectionLabel = () => {
+    const parts = [];
+    if (selectedSize) parts.push(selectedSize);
+    for (const field of customFields) {
+      const val = selectedOptions[field.name];
+      if (val) parts.push(val);
+    }
+    return parts.length ? ` (${parts.join(", ")})` : "";
+  };
+
   const handleAddToCart = () => {
     if (!product?.inStock) {
       showToast("This item is currently out of stock.");
       return;
     }
     if (!requireSize()) return;
+    if (!requireCustomOptions()) return;
     const result = addItem(product, {
       size: selectedSize,
       color: selectedColor,
+      selectedOptions,
       qty,
     });
     if (!result.ok) {
       showToast(result.error || "Could not add to bag.");
       return;
     }
-    const sizeLabel = selectedSize ? ` (${selectedSize})` : "";
-    showToast(`Added ${qty} × ${product.name}${sizeLabel} to your bag.`);
+    showToast(`Added ${qty} × ${product.name}${selectionLabel()} to your bag.`);
   };
 
   const handleBuyNow = () => {
@@ -174,9 +216,11 @@ export default function ProductDetail() {
       return;
     }
     if (!requireSize()) return;
+    if (!requireCustomOptions()) return;
     addItem(product, {
       size: selectedSize,
       color: selectedColor,
+      selectedOptions,
       qty,
     });
     navigate("/checkout");
@@ -343,6 +387,40 @@ export default function ProductDetail() {
                 </div>
               )}
 
+              {customFields.map((field) => (
+                <div className="pd-option" key={field.name}>
+                  <div className="pd-option-label">
+                    {field.name}
+                    <span>
+                      {selectedOptions[field.name] || `Select ${field.name}`}
+                    </span>
+                  </div>
+                  <div className="pd-sizes">
+                    {(field.values || []).map((value) => (
+                      <button
+                        key={value}
+                        type="button"
+                        className={`pd-size-btn${
+                          selectedOptions[field.name] === value ? " active" : ""
+                        }`}
+                        onClick={() => {
+                          setSelectedOptions((prev) => ({
+                            ...prev,
+                            [field.name]: value,
+                          }));
+                          setOptionError("");
+                        }}
+                      >
+                        {value}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              {optionError && (
+                <p className="pd-size-error">{optionError}</p>
+              )}
+
               <div className="pd-option">
                 <div className="pd-option-label">Quantity</div>
                 <div className="pd-qty">
@@ -388,7 +466,12 @@ export default function ProductDetail() {
               <div className="pd-trust">
                 <div className="pd-trust-item">
                   <i className="fas fa-truck" aria-hidden="true"></i>
-                  Free shipping over ₹999
+                  {product.deliveryCharge !== null &&
+                  product.deliveryCharge !== undefined
+                    ? Number(product.deliveryCharge) === 0
+                      ? "Free delivery on this product"
+                      : `Delivery ₹${Number(product.deliveryCharge)}`
+                    : "Free shipping over ₹999"}
                 </div>
                 <div className="pd-trust-item">
                   <i className="fas fa-rotate-left" aria-hidden="true"></i>

@@ -25,9 +25,10 @@ service cloud.firestore {
     function isValidProduct(data) {
       return data.keys().hasOnly([
           'name', 'category', 'gender', 'price', 'originalPrice', 'stock',
-          'amount', 'rating', 'reviews', 'badge', 'colors', 'sizes', 'images',
-          'imagePaths', 'shortDesc', 'description', 'details', 'inStock',
-          'active', 'createdAt', 'updatedAt'
+          'amount', 'rating', 'reviews', 'badge', 'colors', 'sizes',
+          'customOptions', 'deliveryCharge', 'images', 'imagePaths',
+          'shortDesc', 'description', 'details', 'inStock', 'active',
+          'createdAt', 'updatedAt'
         ]) &&
         data.keys().hasAll([
           'name', 'category', 'gender', 'price', 'originalPrice', 'stock',
@@ -46,6 +47,14 @@ service cloud.firestore {
         (!('badge' in data) || data.badge == null || isShortString(data.badge, 40)) &&
         data.colors is list && data.colors.size() <= 20 &&
         data.sizes is list && data.sizes.size() <= 20 &&
+        // Accessories may expose admin-defined selectors such as Flavour or Volume.
+        // Apparel stores an empty list here.
+        (!('customOptions' in data) ||
+          (data.customOptions is list && data.customOptions.size() <= 10)) &&
+        // null means use the store-wide delivery price; accessories set a fee.
+        (!('deliveryCharge' in data) || data.deliveryCharge == null ||
+          (data.deliveryCharge is number && data.deliveryCharge >= 0 &&
+            data.deliveryCharge <= 100000)) &&
         data.images is list && data.images.size() <= 12 &&
         data.imagePaths is list && data.imagePaths.size() <= 12 &&
         data.details is list && data.details.size() <= 30 &&

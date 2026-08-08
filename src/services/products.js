@@ -30,10 +30,33 @@ function slugify(text) {
     .slice(0, 60);
 }
 
+/** Normalize admin-defined option groups, e.g. Flavour → Sandal, Divine */
+export function normalizeCustomOptions(raw) {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((field) => {
+      const name = String(field?.name || "").trim();
+      const values = Array.isArray(field?.values)
+        ? field.values.map((v) => String(v || "").trim()).filter(Boolean)
+        : [];
+      return { name, values };
+    })
+    .filter((f) => f.name && f.values.length > 0);
+}
+
 export function normalizeProduct(id, data = {}) {
   const stock = Number(data.stock ?? data.amount ?? 0);
   const inStock =
     data.inStock !== undefined ? data.inStock !== false : stock > 0;
+
+  // null = use default store shipping; number (incl. 0) = admin-set charge
+  const hasCustomDelivery =
+    data.deliveryCharge !== undefined &&
+    data.deliveryCharge !== null &&
+    data.deliveryCharge !== "";
+  const deliveryCharge = hasCustomDelivery
+    ? Math.max(0, Number(data.deliveryCharge) || 0)
+    : null;
 
   return {
     id,
@@ -49,6 +72,8 @@ export function normalizeProduct(id, data = {}) {
     badge: data.badge || null,
     colors: Array.isArray(data.colors) ? data.colors : [],
     sizes: Array.isArray(data.sizes) ? data.sizes : [],
+    customOptions: normalizeCustomOptions(data.customOptions),
+    deliveryCharge,
     images: Array.isArray(data.images) ? data.images : [],
     imagePaths: Array.isArray(data.imagePaths) ? data.imagePaths : [],
     shortDesc: data.shortDesc || "",
@@ -161,6 +186,20 @@ function buildPayload(form, { isNew = false } = {}) {
   const inStock =
     form.inStock !== undefined ? form.inStock !== false : safeStock > 0;
 
+  const isAccessories = (form.gender || "").toLowerCase() === "accessories";
+  const customOptions = isAccessories
+    ? normalizeCustomOptions(form.customOptions)
+    : [];
+  // Accessories: admin-set delivery (default 0 if left blank). Apparel: null → store default.
+  let deliveryCharge = null;
+  if (isAccessories) {
+    const raw = form.deliveryCharge;
+    deliveryCharge =
+      raw === "" || raw === undefined || raw === null
+        ? 0
+        : Math.max(0, Number(raw) || 0);
+  }
+
   return {
     name: form.name.trim(),
     category: form.category.trim() || "T-Shirts",
@@ -173,7 +212,10 @@ function buildPayload(form, { isNew = false } = {}) {
     reviews: Number(form.reviews) || 0,
     badge: form.badge?.trim() || null,
     colors: form.colors || [],
-    sizes: form.sizes || [],
+    // Accessories use customOptions instead of clothing sizes
+    sizes: isAccessories ? [] : form.sizes || [],
+    customOptions,
+    deliveryCharge,
     images: form.images || [],
     imagePaths: form.imagePaths || [],
     shortDesc: form.shortDesc?.trim() || "",

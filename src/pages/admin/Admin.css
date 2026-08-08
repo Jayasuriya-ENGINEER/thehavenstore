@@ -469,6 +469,51 @@
   accent-color: #fff;
 }
 
+.admin-custom-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.admin-custom-option-card {
+  background: #fafafa;
+  border: 1px solid var(--color-grey);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-custom-option-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-custom-option-header input {
+  flex: 1;
+  min-width: 140px;
+}
+
+.admin-option-previews {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.admin-option-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #111;
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
 .admin-colors-editor {
   display: flex;
   flex-direction: column;
@@ -738,7 +783,7 @@
 
 .admin-banner-card {
   position: relative;
-  aspect-ratio: 16 / 7;
+  aspect-ratio: 1024 / 300;
   border-radius: 12px;
   overflow: hidden;
   background: var(--color-light-grey);
