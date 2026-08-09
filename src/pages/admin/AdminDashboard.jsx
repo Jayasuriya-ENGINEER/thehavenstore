@@ -19,6 +19,7 @@ import {
   removeHomePopupBanner,
 } from "../../services/banners";
 import { formatPrice } from "../../data/mensProducts";
+import HomeCollectionManager from "../../components/admin/HomeCollectionManager";
 import "./Admin.css";
 
 const CATEGORIES = [
@@ -707,6 +708,8 @@ export default function AdminDashboard() {
               </label>
             </div>
           </section>
+
+          <HomeCollectionManager />
 
           {/* ── Section banners ── */}
           <section className="admin-banners-panel" aria-labelledby="admin-banners-title">

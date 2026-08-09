@@ -1,0 +1,24 @@
+.home-collections { padding: 126px clamp(20px, 3.4vw, 52px) 48px; background: #fff; }
+.home-collections-heading { text-align: center; margin: 0 auto 28px; }
+.home-collections-heading > p { margin-bottom: 8px; color: #111; text-transform: uppercase; letter-spacing: .34em; font-size: .78rem; font-weight: 800; }
+.home-collections-heading h3 { margin: 0; font-size: clamp(3rem, 5vw, 5rem); letter-spacing: -.065em; }
+.home-collections-heading > span { display: block; margin-top: 12px; color: #666; font-size: clamp(.95rem, 1.3vw, 1.12rem); line-height: 1.45; }
+.home-collections-viewport { max-width: 1440px; margin: auto; overflow: hidden; }
+.home-collections-grid { display: flex; gap: 18px; }
+.home-collection { position: relative; flex: .8 1 0; min-width: 0; min-height: 510px; overflow: hidden; border-radius: 14px; background: #282828; isolation: isolate; transition: flex-grow 700ms cubic-bezier(.22, 1, .36, 1), filter 700ms ease; }
+.home-collection.is-active { flex-grow: 1.65; }
+.home-collection-image { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; object-fit: cover; }
+.home-collection-placeholder { position: absolute; inset: 0; display: grid; place-items: center; background: linear-gradient(135deg, #d9d9d9, #9b9b9b); color: rgba(0,0,0,.55); font-size: .78rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.home-collection:nth-child(2) .home-collection-placeholder { background: linear-gradient(135deg, #d6d6d6, #8c8c8c); }
+.home-collection-overlay { position: absolute; inset: 0; z-index: 1; background: linear-gradient(180deg, rgba(0,0,0,.02) 35%, rgba(0,0,0,.88) 100%); }
+.home-collection-copy { position: absolute; z-index: 2; right: 30px; bottom: 28px; left: 30px; color: #fff; }
+.home-collection-copy h2 { color: #fff; margin: 0 0 2px; font-size: clamp(1.65rem, 2.4vw, 2.2rem); text-transform: uppercase; }
+.home-collection-copy p { margin: 0; color: #fff; font-size: 1rem; }
+.home-collection-copy span { display: inline-flex; gap: 9px; align-items: center; margin-top: 26px; padding-bottom: 5px; color: #fff; border-bottom: 1px solid currentColor; font-size: .86rem; font-weight: 800; text-transform: uppercase; }
+.home-collections-dots { display: none; }
+.home-benefits { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; max-width: 1440px; margin: 28px auto 0; padding: 28px 38px; border-radius: 14px; background: #f7f7f7; }
+.home-benefits > div { display: flex; align-items: center; gap: 17px; padding-right: 18px; border-right: 1px solid #ddd; }
+.home-benefits > div:last-child { border: 0; }.home-benefits i { font-size: 2rem; color: #111; }.home-benefits p { margin: 0; line-height: 1.35; }.home-benefits strong, .home-benefits span { display: block; }.home-benefits strong { color: #111; font-size: .83rem; text-transform: uppercase; }.home-benefits span { color: #333; font-size: .84rem; margin-top: 3px; }
+@media (max-width: 900px) { .home-benefits { grid-template-columns: repeat(2, 1fr); }.home-benefits > div:nth-child(2) { border-right: 0; } }
+@media (max-width: 700px) { .home-collections { padding: 100px 16px 30px; }.home-collections-heading { margin-bottom: 22px; }.home-collections-grid { width: 300%; gap: 0; transform: translateX(var(--mobile-slide-offset)); transition: transform 650ms cubic-bezier(.22, 1, .36, 1); }.home-collection, .home-collection.is-active { flex: 0 0 33.333333%; min-height: 420px; border-radius: 12px; }.home-collection-copy { right: 23px; bottom: 22px; left: 23px; }.home-collections-dots { display: flex; justify-content: center; gap: 7px; margin-top: 14px; }.home-collections-dots button { width: 7px; height: 7px; padding: 0; border: 0; border-radius: 50%; background: #c8c8c8; cursor: pointer; transition: width 250ms ease, background 250ms ease; }.home-collections-dots button.is-active { width: 22px; border-radius: 10px; background: #111; }.home-benefits { grid-template-columns: 1fr; gap: 18px; padding: 24px; }.home-benefits > div { padding: 0 0 18px; border: 0; border-bottom: 1px solid #ddd; }.home-benefits > div:last-child { padding-bottom: 0; } }
+@media (prefers-reduced-motion: reduce) { .home-collection, .home-collections-grid, .home-collections-dots button { transition: none; } }
