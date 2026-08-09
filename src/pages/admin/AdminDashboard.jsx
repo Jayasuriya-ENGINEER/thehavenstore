@@ -19,6 +19,7 @@ import {
   removeHomePopupBanner,
 } from "../../services/banners";
 import { formatPrice } from "../../data/mensProducts";
+import HomeCollectionManager from "../../components/admin/HomeCollectionManager";
 import "./Admin.css";
 
 const CATEGORIES = [
@@ -35,6 +36,8 @@ const CATEGORIES = [
 
 const SIZE_OPTIONS = ["XS", "S", "M", "L", "XL", "XXL", "28", "30", "32", "34", "36"];
 
+const emptyCustomOption = () => ({ name: "", valuesText: "" });
+
 const emptyForm = () => ({
   id: "",
   name: "",
@@ -49,6 +52,8 @@ const emptyForm = () => ({
   detailsText: "",
   colors: [{ name: "Black", hex: "#111111" }],
   sizes: ["S", "M", "L", "XL", "XXL"],
+  customOptions: [],
+  deliveryCharge: "",
   images: [],
   imagePaths: [],
   rating: 0,
@@ -58,6 +63,7 @@ const emptyForm = () => ({
 });
 
 function productToForm(p) {
+  const isAccessories = (p.gender || "").toLowerCase() === "accessories";
   return {
     id: p.id || "",
     name: p.name || "",
@@ -74,7 +80,17 @@ function productToForm(p) {
       p.colors?.length > 0
         ? p.colors.map((c) => ({ name: c.name || "", hex: c.hex || "#111111" }))
         : [{ name: "Black", hex: "#111111" }],
-    sizes: p.sizes?.length ? [...p.sizes] : ["S", "M", "L", "XL"],
+    sizes: p.sizes?.length ? [...p.sizes] : isAccessories ? [] : ["S", "M", "L", "XL"],
+    customOptions: Array.isArray(p.customOptions)
+      ? p.customOptions.map((f) => ({
+          name: f.name || "",
+          valuesText: Array.isArray(f.values) ? f.values.join(", ") : "",
+        }))
+      : [],
+    deliveryCharge:
+      p.deliveryCharge !== undefined && p.deliveryCharge !== null
+        ? p.deliveryCharge
+        : "",
     images: Array.isArray(p.images) ? [...p.images] : [],
     imagePaths: Array.isArray(p.imagePaths) ? [...p.imagePaths] : [],
     rating: p.rating || 0,
@@ -82,6 +98,14 @@ function productToForm(p) {
     inStock: p.inStock !== false,
     active: p.active !== false,
   };
+}
+
+/** Parse "Sandal, Divine, Rose" → ["Sandal", "Divine", "Rose"] */
+function parseOptionValues(text) {
+  return String(text || "")
+    .split(/[,|\n]/)
+    .map((v) => v.trim())
+    .filter(Boolean);
 }
 
 export default function AdminDashboard() {
@@ -214,8 +238,24 @@ export default function AdminDashboard() {
   };
 
   const setField = (key, value) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
+    setForm((prev) => {
+      const next = { ...prev, [key]: value };
+      // Switching to accessories: drop clothing sizes, keep custom options
+      if (key === "gender" && value === "accessories") {
+        next.sizes = [];
+        if (!next.category || next.category === "T-Shirts") {
+          next.category = "Accessories";
+        }
+      }
+      // Leaving accessories: restore default sizes if empty
+      if (key === "gender" && value !== "accessories" && prev.gender === "accessories") {
+        if (!next.sizes?.length) next.sizes = ["S", "M", "L", "XL", "XXL"];
+      }
+      return next;
+    });
   };
+
+  const isAccessoriesForm = form.gender === "accessories";
 
   const toggleSize = (size) => {
     setForm((prev) => {
@@ -252,18 +292,54 @@ export default function AdminDashboard() {
     }));
   };
 
+  const addCustomOption = () => {
+    setForm((prev) => ({
+      ...prev,
+      customOptions: [...(prev.customOptions || []), emptyCustomOption()],
+    }));
+  };
+
+  const updateCustomOption = (index, key, value) => {
+    setForm((prev) => {
+      const customOptions = (prev.customOptions || []).map((f, i) =>
+        i === index ? { ...f, [key]: value } : f,
+      );
+      return { ...prev, customOptions };
+    });
+  };
+
+  const removeCustomOption = (index) => {
+    setForm((prev) => ({
+      ...prev,
+      customOptions: (prev.customOptions || []).filter((_, i) => i !== index),
+    }));
+  };
+
   const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files || []);
     e.target.value = "";
     if (!files.length) return;
+
+    const availableSlots = 12 - form.images.length;
+    if (availableSlots <= 0) {
+      setError("A product can have up to 12 photos.");
+      return;
+    }
+
+    const imageFiles = files.filter((file) => file.type.startsWith("image/"));
+    if (!imageFiles.length) {
+      setError("Please choose image files only.");
+      return;
+    }
+
+    const filesToUpload = imageFiles.slice(0, availableSlots);
 
     setUploading(true);
     setError("");
     try {
       const key = form.id || form.name || "new";
       const uploaded = [];
-      for (const file of files) {
-        if (!file.type.startsWith("image/")) continue;
+      for (const file of filesToUpload) {
         const result = await uploadProductImage(file, key);
         uploaded.push(result);
       }
@@ -276,6 +352,9 @@ export default function AdminDashboard() {
         images: [...prev.images, ...uploaded.map((u) => u.url)],
         imagePaths: [...prev.imagePaths, ...uploaded.map((u) => u.path)],
       }));
+      if (imageFiles.length > availableSlots) {
+        setError("Only the first available photos were uploaded (maximum 12 per product).");
+      }
     } catch (err) {
       console.error(err);
       setError(
@@ -299,7 +378,36 @@ export default function AdminDashboard() {
     if (!form.name.trim()) return "Product name is required.";
     if (!form.price && form.price !== 0) return "Price is required.";
     if (Number(form.price) < 0) return "Price cannot be negative.";
-    if (!form.sizes.length) return "Select at least one size.";
+    if (form.originalPrice !== "" && Number(form.originalPrice) < 0) {
+      return "MRP cannot be negative.";
+    }
+    if (form.originalPrice !== "" && Number(form.originalPrice) < Number(form.price)) {
+      return "MRP must be the same as or greater than the selling price.";
+    }
+    if (form.stock !== "" && (!Number.isFinite(Number(form.stock)) || Number(form.stock) < 0)) {
+      return "Stock cannot be negative.";
+    }
+    if (isAccessoriesForm) {
+      if (
+        form.deliveryCharge !== "" &&
+        form.deliveryCharge !== null &&
+        Number(form.deliveryCharge) < 0
+      ) {
+        return "Delivery charge cannot be negative.";
+      }
+      for (const field of form.customOptions || []) {
+        const name = (field.name || "").trim();
+        const values = parseOptionValues(field.valuesText);
+        if (name && !values.length) {
+          return `Add at least one option value for “${name}”.`;
+        }
+        if (!name && values.length) {
+          return "Each detail field needs a name (e.g. Flavour, Volume).";
+        }
+      }
+    } else if (!form.sizes.length) {
+      return "Select at least one size.";
+    }
     if (!form.images.length) return "Upload at least one product photo.";
     return null;
   };
@@ -315,6 +423,13 @@ export default function AdminDashboard() {
     setSaving(true);
     setError("");
     try {
+      const customOptions = (form.customOptions || [])
+        .map((f) => ({
+          name: (f.name || "").trim(),
+          values: parseOptionValues(f.valuesText),
+        }))
+        .filter((f) => f.name && f.values.length);
+
       const payload = {
         ...form,
         details: form.detailsText
@@ -327,6 +442,13 @@ export default function AdminDashboard() {
             hex: c.hex || "#111111",
           }))
           .filter((c) => c.name),
+        customOptions: isAccessoriesForm ? customOptions : [],
+        sizes: isAccessoriesForm ? [] : form.sizes,
+        deliveryCharge: isAccessoriesForm
+          ? form.deliveryCharge === "" || form.deliveryCharge === null
+            ? 0
+            : Number(form.deliveryCharge) || 0
+          : null,
         stock: Number(form.stock) || 0,
         amount: Number(form.stock) || 0,
         price: Number(form.price) || 0,
@@ -586,6 +708,8 @@ export default function AdminDashboard() {
               </label>
             </div>
           </section>
+
+          <HomeCollectionManager />
 
           {/* ── Section banners ── */}
           <section className="admin-banners-panel" aria-labelledby="admin-banners-title">
@@ -1014,26 +1138,116 @@ export default function AdminDashboard() {
                   />
                 </div>
 
-                <div className="admin-field full">
-                  <label>Sizes *</label>
-                  <div className="admin-checks">
-                    {SIZE_OPTIONS.map((size) => (
-                      <label
-                        key={size}
-                        className={`admin-check-chip${
-                          form.sizes.includes(size) ? " active" : ""
-                        }`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={form.sizes.includes(size)}
-                          onChange={() => toggleSize(size)}
-                        />
-                        {size}
-                      </label>
-                    ))}
+                {isAccessoriesForm ? (
+                  <>
+                    <div className="admin-field">
+                      <label htmlFor="p-delivery">Delivery charge (₹) *</label>
+                      <input
+                        id="p-delivery"
+                        type="number"
+                        min="0"
+                        step="1"
+                        value={form.deliveryCharge}
+                        onChange={(e) =>
+                          setField("deliveryCharge", e.target.value)
+                        }
+                        placeholder="e.g. 40"
+                      />
+                      <span className="admin-field-hint">
+                        Set per product — default store shipping is not used for
+                        accessories.
+                      </span>
+                    </div>
+
+                    <div className="admin-field full">
+                      <label>Product details / options</label>
+                      <span className="admin-field-hint" style={{ marginBottom: 10 }}>
+                        Add custom fields shoppers can choose from (e.g. Flavour,
+                        Volume, Strap size). No clothing sizes are shown.
+                      </span>
+                      <div className="admin-custom-options">
+                        {(form.customOptions || []).map((field, index) => (
+                          <div className="admin-custom-option-card" key={index}>
+                            <div className="admin-custom-option-header">
+                              <input
+                                type="text"
+                                placeholder="Field name (e.g. Flavour)"
+                                value={field.name}
+                                onChange={(e) =>
+                                  updateCustomOption(
+                                    index,
+                                    "name",
+                                    e.target.value,
+                                  )
+                                }
+                                aria-label={`Detail field ${index + 1} name`}
+                              />
+                              <button
+                                type="button"
+                                className="admin-btn admin-btn-danger admin-btn-sm"
+                                onClick={() => removeCustomOption(index)}
+                              >
+                                Remove
+                              </button>
+                            </div>
+                            <input
+                              type="text"
+                              placeholder="Options separated by commas — e.g. Sandal, Divine, Rose"
+                              value={field.valuesText}
+                              onChange={(e) =>
+                                updateCustomOption(
+                                  index,
+                                  "valuesText",
+                                  e.target.value,
+                                )
+                              }
+                              aria-label={`${field.name || "Field"} option values`}
+                            />
+                            {parseOptionValues(field.valuesText).length > 0 && (
+                              <div className="admin-option-previews">
+                                {parseOptionValues(field.valuesText).map((v) => (
+                                  <span key={v} className="admin-option-chip">
+                                    {v}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                        <button
+                          type="button"
+                          className="admin-btn admin-btn-secondary admin-btn-sm"
+                          onClick={addCustomOption}
+                          style={{ alignSelf: "flex-start" }}
+                        >
+                          <i className="fas fa-plus" aria-hidden="true"></i>
+                          Add detail field
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="admin-field full">
+                    <label>Sizes *</label>
+                    <div className="admin-checks">
+                      {SIZE_OPTIONS.map((size) => (
+                        <label
+                          key={size}
+                          className={`admin-check-chip${
+                            form.sizes.includes(size) ? " active" : ""
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={form.sizes.includes(size)}
+                            onChange={() => toggleSize(size)}
+                          />
+                          {size}
+                        </label>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <div className="admin-field full">
                   <label>Colors</label>

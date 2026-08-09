@@ -13,8 +13,9 @@ import {
   validateAddress,
 } from "../services/addresses";
 import {
-  calcShipping,
+  calcShippingFromItems,
   FREE_SHIPPING_THRESHOLD,
+  formatItemOptions,
   placeOrder,
 } from "../services/orders";
 import { payWithRazorpay } from "../services/razorpay";
@@ -42,9 +43,22 @@ export default function Checkout() {
   const [submitError, setSubmitError] = useState("");
   const [loadingAddresses, setLoadingAddresses] = useState(false);
 
-  const shipping = calcShipping(subtotal);
+  const shipping = calcShippingFromItems(items, subtotal);
   const total = subtotal + shipping;
-  const freeShipLeft = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
+  const defaultItems = items.filter(
+    (i) =>
+      i.deliveryCharge === undefined ||
+      i.deliveryCharge === null ||
+      i.deliveryCharge === "",
+  );
+  const defaultSubtotal = defaultItems.reduce(
+    (sum, i) => sum + (Number(i.price) || 0) * (Number(i.qty) || 0),
+    0,
+  );
+  const showFreeShipPromo = defaultItems.length > 0;
+  const freeShipLeft = showFreeShipPromo
+    ? Math.max(0, FREE_SHIPPING_THRESHOLD - defaultSubtotal)
+    : 0;
 
   // Prefill contact from auth
   useEffect(() => {
@@ -662,9 +676,7 @@ export default function Checkout() {
                             {item.name} × {item.qty}
                           </div>
                           <div className="meta">
-                            {[item.size && `Size ${item.size}`, item.color]
-                              .filter(Boolean)
-                              .join(" · ")}
+                            {formatItemOptions(item)}
                           </div>
                           <div style={{ fontWeight: 600, marginTop: 2 }}>
                             {formatPrice(item.price * item.qty)}
@@ -674,14 +686,16 @@ export default function Checkout() {
                     ))}
                   </div>
 
-                  {freeShipLeft > 0 ? (
+                  {showFreeShipPromo && freeShipLeft > 0 && (
                     <div className="ck-ship-note">
-                      Add {formatPrice(freeShipLeft)} more for free shipping
+                      Add {formatPrice(freeShipLeft)} more for free shipping on
+                      apparel
                     </div>
-                  ) : (
+                  )}
+                  {showFreeShipPromo && freeShipLeft <= 0 && (
                     <div className="ck-free-ship">
                       <i className="fas fa-truck" aria-hidden="true"></i>
-                      Free shipping applied
+                      Free shipping on apparel items
                     </div>
                   )}
 

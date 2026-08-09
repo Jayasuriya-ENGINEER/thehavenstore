@@ -15,6 +15,7 @@ import {
 const COLLECTION = "sectionBanners";
 const POPUP_REF = "siteContent";
 const POPUP_ID = "homePopup";
+const HOME_COLLECTIONS_ID = "homeCollections";
 
 /** Valid shop section keys for banners */
 export const BANNER_SECTIONS = [
@@ -119,6 +120,35 @@ export async function removeHomePopupBanner() {
   const current = await fetchHomePopupBanner();
   await deleteDoc(doc(db, POPUP_REF, POPUP_ID));
   if (current?.path) await deleteStoragePath(current.path);
+}
+/** Images used by the three category cards on the home page. */
+export async function fetchHomeCollections() {
+  try {
+    const snap = await getDoc(doc(db, POPUP_REF, HOME_COLLECTIONS_ID));
+    const data = snap.exists() ? snap.data() : {};
+    return BANNER_SECTIONS.reduce((collections, { key }) => {
+      const image = data[key];
+      collections[key] = image?.url ? { url: image.url, path: image.path || "" } : null;
+      return collections;
+    }, {});
+  } catch (err) {
+    console.warn("Home collections fetch failed:", err?.message);
+    return {};
+  }
+}
+
+export async function replaceHomeCollectionImage(section, file) {
+  if (!isValidBannerSection(section)) throw new Error("Invalid collection section");
+  if (!file?.type?.startsWith("image/")) throw new Error("Please choose an image file");
+  const current = await fetchHomeCollections();
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+  const path = `site-banners/home-collections/${section}_${Date.now()}_${safeName}`;
+  const storageRef = ref(storage, path);
+  await uploadBytes(storageRef, file);
+  const url = await getDownloadURL(storageRef);
+  await setDoc(doc(db, POPUP_REF, HOME_COLLECTIONS_ID), { [section]: { url, path }, updatedAt: serverTimestamp() }, { merge: true });
+  if (current[section]?.path) await deleteStoragePath(current[section].path);
+  return { url, path };
 }
 
 /**

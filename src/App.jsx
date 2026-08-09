@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
 import Navbar from "./components/Navbar";
-import Hero from "./components/Hero";
+import HomeCollections from "./components/HomeCollections";
 import About from "./components/About";
 import WhyChooseUs from "./components/WhyChooseUs";
 
@@ -53,14 +53,17 @@ function HomePage() {
     return () => cancelAnimationFrame(frame);
   }, [location.hash]);
 
+  //removed the <products /> component from the home page because it was not needed as per the new design.
+  //removed the <portfolio /> component from the home page because it was not needed as per the new design.
+  //removed the <bulkorders /> component from the home page because it was not needed as per the new design.
+  //removed the <enquiryform /> component from the home page because it was not needed as per the new design.
+  //removed the <whychooseus /> component from the home page because it was not needed as per the new design.
   return (
     <>
       <Navbar />
       <HomePopupBanner />
-      <Hero />
+      <HomeCollections />
       <About />
-      <WhyChooseUs />
-      
 
       
       <Testimonials />
