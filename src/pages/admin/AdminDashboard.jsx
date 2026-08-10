@@ -93,7 +93,7 @@ function productToForm(p) {
     colors:
       p.colors?.length > 0
         ? p.colors.map((c) => ({ name: c.name || "", hex: c.hex || "#111111" }))
-        : [{ name: "Black", hex: "#111111" }],
+        : [],
     sizes: p.sizes?.length ? [...p.sizes] : isAccessories ? [] : ["S", "M", "L", "XL"],
     customOptions: Array.isArray(p.customOptions)
       ? p.customOptions.map((f) => ({
@@ -1613,7 +1613,7 @@ export default function AdminDashboard() {
                 )}
 
                 <div className="admin-field full">
-                  <label>Colors</label>
+                  <label>Colors (optional)</label>
                   <div className="admin-colors-editor">
                     {form.colors.map((color, index) => (
                       <div className="admin-color-row" key={index}>
@@ -1637,7 +1637,6 @@ export default function AdminDashboard() {
                           type="button"
                           className="admin-btn admin-btn-danger admin-btn-sm"
                           onClick={() => removeColor(index)}
-                          disabled={form.colors.length <= 1}
                         >
                           Remove
                         </button>
