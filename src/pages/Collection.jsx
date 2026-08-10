@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import SectionBannerSlideshow from "../components/SectionBannerSlideshow";
+import ShopProductImage from "../components/ShopProductImage";
 import {
   mensProducts,
   formatPrice,
@@ -158,34 +159,18 @@ export default function Collection({ sectionKey }) {
                   product.price,
                   product.originalPrice,
                 );
-                const image = product.images?.[0];
                 return (
                   <Link
                     key={product.id}
                     to={`${section.path}/${product.id}`}
                     className="shop-card"
                   >
-                    <div className="shop-card-image">
-                      {product.badge && (
-                        <span className="shop-card-badge">{product.badge}</span>
-                      )}
-                      {!product.badge && discount > 0 && (
-                        <span className="shop-card-badge sale">
-                          {discount}% OFF
-                        </span>
-                      )}
-                      {image ? (
-                        <img src={image} alt={product.name} />
-                      ) : (
-                        <div
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            background: "#eee",
-                          }}
-                        />
-                      )}
-                    </div>
+                    <ShopProductImage
+                      images={product.images}
+                      name={product.name}
+                      badge={product.badge}
+                      discount={discount}
+                    />
                     <div className="shop-card-body">
                       <span className="shop-card-category">
                         {product.category}

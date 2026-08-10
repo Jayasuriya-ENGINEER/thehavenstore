@@ -6,6 +6,8 @@ service cloud.firestore {
     // sectionBanners: admin-managed public image lists for men, women and accessories.
     // users: private customer profile (email, address, cart and order summaries).
     // orders: private order and payment data owned by `userId`.
+    // promoCodes: admin-managed code, discount and expiry; shoppers may look up
+    // a single code but cannot enumerate, create, update, or delete codes.
 
     function signedIn() {
       return request.auth != null;
@@ -24,7 +26,7 @@ service cloud.firestore {
 
     function isValidProduct(data) {
       return data.keys().hasOnly([
-          'name', 'category', 'gender', 'price', 'originalPrice', 'stock',
+          'name', 'category', 'gender', 'groupName', 'price', 'originalPrice', 'stock',
           'amount', 'rating', 'reviews', 'badge', 'colors', 'sizes',
           'customOptions', 'deliveryCharge', 'images', 'imagePaths',
           'shortDesc', 'description', 'details', 'inStock', 'active',
@@ -38,6 +40,8 @@ service cloud.firestore {
         isShortString(data.name, 160) &&
         isShortString(data.category, 80) &&
         data.gender in ['men', 'women', 'unisex', 'accessories'] &&
+        // Optional collection tag shared by related products (e.g. "#7").
+        (!('groupName' in data) || isShortString(data.groupName, 40)) &&
         data.price is number && data.price >= 0 && data.price <= 1000000 &&
         data.originalPrice is number && data.originalPrice >= 0 && data.originalPrice <= 1000000 &&
         data.stock is number && data.stock >= 0 && data.stock <= 1000000 &&
@@ -71,6 +75,24 @@ service cloud.firestore {
         data.updatedAt is timestamp;
     }
 
+    function isValidPromoCode(data) {
+      return data.keys().hasOnly([
+          'code', 'discountType', 'discountValue', 'expiresAt', 'active',
+          'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasAll([
+          'code', 'discountType', 'discountValue', 'expiresAt', 'active',
+          'createdAt', 'updatedAt'
+        ]) &&
+        data.code is string && data.code.matches('^[A-Z0-9_-]{3,30}$') &&
+        data.discountType in ['percent', 'amount'] &&
+        data.discountValue is number && data.discountValue > 0 &&
+        data.discountValue <= 100000 &&
+        (data.discountType != 'percent' || data.discountValue <= 100) &&
+        data.expiresAt is timestamp && data.active is bool &&
+        data.createdAt is timestamp && data.updatedAt is timestamp;
+    }
+
     function isValidUser(data) {
       return data.keys().hasOnly([
           'uid', 'email', 'displayName', 'createdAt', 'role', 'cart', 'orders',
@@ -94,7 +116,7 @@ service cloud.firestore {
     function isValidOrder(data) {
       return data.keys().hasOnly([
           'userId', 'items', 'itemCount', 'shippingAddress', 'contact', 'subtotal',
-          'mrpTotal', 'discount', 'shipping', 'total', 'currency', 'paymentMethod',
+          'mrpTotal', 'discount', 'promoDiscount', 'promoCode', 'shipping', 'total', 'currency', 'paymentMethod',
           'paymentStatus', 'razorpayOrderId', 'razorpayPaymentId', 'razorpaySignature',
           'orderStatus', 'notes', 'expectedDeliveryAt', 'createdAt', 'updatedAt'
         ]) &&
@@ -110,10 +132,12 @@ service cloud.firestore {
         data.subtotal is number && data.subtotal >= 0 &&
         data.mrpTotal is number && data.mrpTotal >= 0 &&
         data.discount is number && data.discount >= 0 &&
+        (!('promoDiscount' in data) || (data.promoDiscount is number && data.promoDiscount >= 0)) &&
+        (!('promoCode' in data) || data.promoCode == null || isShortString(data.promoCode, 30)) &&
         data.shipping is number && data.shipping >= 0 &&
         data.total is number && data.total >= 0 &&
         data.currency == 'INR' &&
-        data.paymentMethod in ['cod', 'razorpay'] &&
+        data.paymentMethod in ['cod', 'razorpay', 'promo'] &&
         data.paymentStatus in ['pending', 'paid'] &&
         data.orderStatus == 'placed' &&
         isShortString(data.notes, 1000) &&
@@ -134,6 +158,18 @@ service cloud.firestore {
       allow read: if section in ['men', 'women', 'accessories'];
       allow create, update: if isAdmin() &&
         section in ['men', 'women', 'accessories'] && isValidBanner(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /promoCodes/{code} {
+      // Signed-in customers redeem by direct document id; code lists remain private.
+      allow get: if signedIn();
+      allow list: if isAdmin();
+      allow create: if isAdmin() && isValidPromoCode(request.resource.data) &&
+        request.resource.data.code == code;
+      allow update: if isAdmin() && isValidPromoCode(request.resource.data) &&
+        request.resource.data.code == resource.data.code &&
+        request.resource.data.createdAt == resource.data.createdAt;
       allow delete: if isAdmin();
     }
 

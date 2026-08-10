@@ -14,12 +14,18 @@ import {
   addBannerImages,
   removeBannerImage,
   saveSectionBanners,
+  updateBannerProductLink,
   fetchHomePopupBanner,
   replaceHomePopupBanner,
   removeHomePopupBanner,
 } from "../../services/banners";
 import { formatPrice } from "../../data/mensProducts";
 import HomeCollectionManager from "../../components/admin/HomeCollectionManager";
+import {
+  deletePromoCode,
+  fetchPromoCodes,
+  savePromoCode,
+} from "../../services/promoCodes";
 import "./Admin.css";
 
 const CATEGORIES = [
@@ -37,12 +43,19 @@ const CATEGORIES = [
 const SIZE_OPTIONS = ["XS", "S", "M", "L", "XL", "XXL", "28", "30", "32", "34", "36"];
 
 const emptyCustomOption = () => ({ name: "", valuesText: "" });
+const emptyPromoForm = () => ({
+  code: "",
+  discountType: "percent",
+  discountValue: "",
+  expiresAt: "",
+});
 
 const emptyForm = () => ({
   id: "",
   name: "",
   category: "T-Shirts",
   gender: "men",
+  groupName: "",
   price: "",
   originalPrice: "",
   stock: "",
@@ -69,6 +82,7 @@ function productToForm(p) {
     name: p.name || "",
     category: p.category || "T-Shirts",
     gender: p.gender || "men",
+    groupName: p.groupName || "",
     price: p.price ?? "",
     originalPrice: p.originalPrice ?? "",
     stock: p.stock ?? p.amount ?? "",
@@ -130,9 +144,19 @@ export default function AdminDashboard() {
   const [bannersLoading, setBannersLoading] = useState(true);
   const [bannerUploading, setBannerUploading] = useState(false);
   const [bannerError, setBannerError] = useState("");
+  /** Product id applied to newly uploaded banners in this section */
+  const [bannerLinkProductId, setBannerLinkProductId] = useState("");
+  /** Draft product-id values while editing each banner card */
+  const [bannerLinkDrafts, setBannerLinkDrafts] = useState({});
+  const [bannerLinkSavingId, setBannerLinkSavingId] = useState("");
   const [popupBanner, setPopupBanner] = useState(null);
   const [popupLoading, setPopupLoading] = useState(true);
   const [popupUploading, setPopupUploading] = useState(false);
+  const [promoCodes, setPromoCodes] = useState([]);
+  const [promoForm, setPromoForm] = useState(emptyPromoForm());
+  const [promosLoading, setPromosLoading] = useState(true);
+  const [promoSaving, setPromoSaving] = useState(false);
+  const [promoError, setPromoError] = useState("");
 
   const loadProducts = useCallback(async () => {
     setLoading(true);
@@ -180,6 +204,19 @@ export default function AdminDashboard() {
     }
   }, []);
 
+  const loadPromoCodes = useCallback(async () => {
+    setPromosLoading(true);
+    setPromoError("");
+    try {
+      setPromoCodes(await fetchPromoCodes());
+    } catch (err) {
+      console.error(err);
+      setPromoError(err?.message || "Could not load promo codes.");
+    } finally {
+      setPromosLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     loadProducts();
   }, [loadProducts]);
@@ -191,6 +228,12 @@ export default function AdminDashboard() {
   useEffect(() => {
     loadPopupBanner();
   }, [loadPopupBanner]);
+
+  useEffect(() => {
+    // Defer the initial fetch so this effect only subscribes/schedules work.
+    const timer = window.setTimeout(loadPromoCodes, 0);
+    return () => window.clearTimeout(timer);
+  }, [loadPromoCodes]);
 
   useEffect(() => {
     if (!success) return;
@@ -458,10 +501,18 @@ export default function AdminDashboard() {
 
       if (editingId) {
         await updateProduct(editingId, payload);
-        setSuccess(`Updated “${payload.name}”.`);
+        setSuccess(
+          `Updated “${payload.name}”. Product ID: ${editingId}${
+            payload.groupName ? ` · Group: ${payload.groupName}` : ""
+          }`,
+        );
       } else {
-        await createProduct(payload);
-        setSuccess(`Added “${payload.name}”.`);
+        const created = await createProduct(payload);
+        setSuccess(
+          `Added “${payload.name}”. Product ID: ${created.id} — use this ID when linking banners.${
+            created.groupName ? ` Group: ${created.groupName}` : ""
+          }`,
+        );
       }
 
       setModalOpen(false);
@@ -496,6 +547,36 @@ export default function AdminDashboard() {
     }
   };
 
+  const handlePromoSave = async (e) => {
+    e.preventDefault();
+    setPromoSaving(true);
+    setPromoError("");
+    try {
+      await savePromoCode(promoForm);
+      setSuccess(`Promo code â€œ${promoForm.code.trim().toUpperCase()}â€ saved.`);
+      setPromoForm(emptyPromoForm());
+      await loadPromoCodes();
+    } catch (err) {
+      console.error(err);
+      setPromoError(err?.message || "Could not save promo code.");
+    } finally {
+      setPromoSaving(false);
+    }
+  };
+
+  const handlePromoDelete = async (promo) => {
+    if (!window.confirm(`Delete promo code â€œ${promo.code}â€?`)) return;
+    setPromoError("");
+    try {
+      await deletePromoCode(promo.code);
+      setSuccess(`Promo code â€œ${promo.code}â€ deleted.`);
+      await loadPromoCodes();
+    } catch (err) {
+      console.error(err);
+      setPromoError(err?.message || "Could not delete promo code.");
+    }
+  };
+
   const currentBanners = bannersBySection[bannerSection]?.images || [];
 
   const handleBannerUpload = async (e) => {
@@ -506,15 +587,43 @@ export default function AdminDashboard() {
     setBannerUploading(true);
     setBannerError("");
     try {
-      const updated = await addBannerImages(bannerSection, files);
+      const linkId = bannerLinkProductId.trim();
+      if (linkId) {
+        const match = products.find((p) => p.id === linkId);
+        if (!match) {
+          setBannerError(
+            `No product found with ID “${linkId}”. Copy the Product ID from the products list, or leave blank for a non-clickable banner.`,
+          );
+          setBannerUploading(false);
+          return;
+        }
+      }
+
+      const updated = await addBannerImages(
+        bannerSection,
+        files,
+        bannerLinkProductId,
+      );
       setBannersBySection((prev) => ({
         ...prev,
         [bannerSection]: updated,
       }));
+      // Keep drafts in sync for new cards
+      setBannerLinkDrafts((prev) => {
+        const next = { ...prev };
+        for (const img of updated.images || []) {
+          next[img.id] = img.productId || "";
+        }
+        return next;
+      });
       const label =
         BANNER_SECTIONS.find((s) => s.key === bannerSection)?.label ||
         bannerSection;
-      setSuccess(`Banner(s) added for ${label}.`);
+      setSuccess(
+        linkId
+          ? `Banner(s) added for ${label} — linked to product “${linkId}”.`
+          : `Banner(s) added for ${label}. You can link a product ID on each card below.`,
+      );
     } catch (err) {
       console.error(err);
       setBannerError(
@@ -523,6 +632,58 @@ export default function AdminDashboard() {
       );
     } finally {
       setBannerUploading(false);
+    }
+  };
+
+  const handleBannerProductLinkSave = async (imageId) => {
+    if (!imageId) return;
+    const draft = (bannerLinkDrafts[imageId] ?? "").trim();
+    if (draft) {
+      const match = products.find((p) => p.id === draft);
+      if (!match) {
+        setBannerError(
+          `No product found with ID “${draft}”. Check the Product ID in the products table.`,
+        );
+        return;
+      }
+    }
+
+    setBannerLinkSavingId(imageId);
+    setBannerError("");
+    try {
+      const updated = await updateBannerProductLink(
+        bannerSection,
+        imageId,
+        draft,
+      );
+      setBannersBySection((prev) => ({
+        ...prev,
+        [bannerSection]: updated,
+      }));
+      setBannerLinkDrafts((prev) => ({
+        ...prev,
+        [imageId]: draft,
+      }));
+      setSuccess(
+        draft
+          ? `Banner now opens product “${draft}”.`
+          : "Banner product link cleared.",
+      );
+    } catch (err) {
+      console.error(err);
+      setBannerError(err?.message || "Could not save banner product link.");
+    } finally {
+      setBannerLinkSavingId("");
+    }
+  };
+
+  const copyText = async (text) => {
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      setSuccess(`Copied: ${text}`);
+    } catch {
+      setError("Could not copy to clipboard.");
     }
   };
 
@@ -717,9 +878,9 @@ export default function AdminDashboard() {
               <div>
                 <h2 id="admin-banners-title">Section banners</h2>
                 <p>
-                  Upload different slideshow images for Men, Women, and
-                  Accessories. They auto-scroll in a loop at the top of each
-                  section.
+                  Upload slideshow images for Men, Women, and Accessories.
+                  Optionally link each banner to a <strong>Product ID</strong> so
+                  shoppers open that product when they tap the banner.
                 </p>
               </div>
               <button
@@ -771,46 +932,131 @@ export default function AdminDashboard() {
               </div>
             ) : (
               <div className="admin-banner-body">
+                <div className="admin-banner-link-bar">
+                  <div className="admin-field" style={{ margin: 0, flex: 1 }}>
+                    <label htmlFor="banner-product-id">
+                      Product ID for new banners (optional)
+                    </label>
+                    <input
+                      id="banner-product-id"
+                      list="admin-product-id-list"
+                      value={bannerLinkProductId}
+                      onChange={(e) => setBannerLinkProductId(e.target.value)}
+                      placeholder="Paste product id — e.g. classic-crew-neck-tee"
+                      disabled={bannerUploading}
+                    />
+                    <span className="admin-field-hint">
+                      Applied to every image you upload next. You can change the
+                      link per banner below. Copy IDs from the products table.
+                    </span>
+                  </div>
+                  <datalist id="admin-product-id-list">
+                    {products.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name}
+                      </option>
+                    ))}
+                  </datalist>
+                </div>
+
                 <div className="admin-banner-grid">
-                  {currentBanners.map((img, index) => (
-                    <div className="admin-banner-card" key={img.id || index}>
-                      <img src={img.url} alt={`Banner ${index + 1}`} />
-                      <div className="admin-banner-card-actions">
-                        <button
-                          type="button"
-                          className="admin-btn admin-btn-secondary admin-btn-sm"
-                          onClick={() => moveBanner(index, -1)}
-                          disabled={index === 0 || bannerUploading}
-                          aria-label="Move earlier"
-                          title="Move left"
-                        >
-                          <i className="fas fa-arrow-left" aria-hidden="true"></i>
-                        </button>
-                        <button
-                          type="button"
-                          className="admin-btn admin-btn-secondary admin-btn-sm"
-                          onClick={() => moveBanner(index, 1)}
-                          disabled={
-                            index === currentBanners.length - 1 || bannerUploading
-                          }
-                          aria-label="Move later"
-                          title="Move right"
-                        >
-                          <i className="fas fa-arrow-right" aria-hidden="true"></i>
-                        </button>
-                        <button
-                          type="button"
-                          className="admin-btn admin-btn-danger admin-btn-sm"
-                          onClick={() => handleBannerRemove(img.id)}
-                          disabled={bannerUploading}
-                          aria-label="Remove banner"
-                        >
-                          <i className="fas fa-trash" aria-hidden="true"></i>
-                        </button>
+                  {currentBanners.map((img, index) => {
+                    const draft =
+                      bannerLinkDrafts[img.id] !== undefined
+                        ? bannerLinkDrafts[img.id]
+                        : img.productId || "";
+                    const linkedProduct = products.find(
+                      (p) => p.id === (draft || "").trim(),
+                    );
+                    const saving = bannerLinkSavingId === img.id;
+                    return (
+                      <div className="admin-banner-card admin-banner-card-linked" key={img.id || index}>
+                        <div className="admin-banner-card-media">
+                          <img src={img.url} alt={`Banner ${index + 1}`} />
+                          <div className="admin-banner-card-actions">
+                            <button
+                              type="button"
+                              className="admin-btn admin-btn-secondary admin-btn-sm"
+                              onClick={() => moveBanner(index, -1)}
+                              disabled={index === 0 || bannerUploading}
+                              aria-label="Move earlier"
+                              title="Move left"
+                            >
+                              <i className="fas fa-arrow-left" aria-hidden="true"></i>
+                            </button>
+                            <button
+                              type="button"
+                              className="admin-btn admin-btn-secondary admin-btn-sm"
+                              onClick={() => moveBanner(index, 1)}
+                              disabled={
+                                index === currentBanners.length - 1 ||
+                                bannerUploading
+                              }
+                              aria-label="Move later"
+                              title="Move right"
+                            >
+                              <i className="fas fa-arrow-right" aria-hidden="true"></i>
+                            </button>
+                            <button
+                              type="button"
+                              className="admin-btn admin-btn-danger admin-btn-sm"
+                              onClick={() => handleBannerRemove(img.id)}
+                              disabled={bannerUploading || saving}
+                              aria-label="Remove banner"
+                            >
+                              <i className="fas fa-trash" aria-hidden="true"></i>
+                            </button>
+                          </div>
+                          <span className="admin-banner-order">#{index + 1}</span>
+                        </div>
+                        <div className="admin-banner-link-fields">
+                          <label htmlFor={`banner-link-${img.id}`}>
+                            Linked product ID
+                          </label>
+                          <div className="admin-banner-link-row">
+                            <input
+                              id={`banner-link-${img.id}`}
+                              list="admin-product-id-list"
+                              value={draft}
+                              onChange={(e) =>
+                                setBannerLinkDrafts((prev) => ({
+                                  ...prev,
+                                  [img.id]: e.target.value,
+                                }))
+                              }
+                              placeholder="product-id"
+                              disabled={saving || bannerUploading}
+                            />
+                            <button
+                              type="button"
+                              className="admin-btn admin-btn-secondary admin-btn-sm"
+                              onClick={() => handleBannerProductLinkSave(img.id)}
+                              disabled={
+                                saving ||
+                                bannerUploading ||
+                                draft.trim() === (img.productId || "")
+                              }
+                            >
+                              {saving ? "…" : "Save"}
+                            </button>
+                          </div>
+                          {linkedProduct ? (
+                            <span className="admin-banner-link-hint ok">
+                              → {linkedProduct.name}
+                            </span>
+                          ) : draft.trim() ? (
+                            <span className="admin-banner-link-hint warn">
+                              No matching product in catalog
+                            </span>
+                          ) : (
+                            <span className="admin-banner-link-hint">
+                              No link — banner is display only
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      <span className="admin-banner-order">#{index + 1}</span>
-                    </div>
-                  ))}
+                    );
+                  })}
 
                   <label
                     className={`admin-banner-upload${
@@ -825,6 +1071,9 @@ export default function AdminDashboard() {
                     </span>
                     <span className="admin-field-hint">
                       JPG / PNG / WebP · wide images work best
+                      {bannerLinkProductId.trim()
+                        ? ` · will link to “${bannerLinkProductId.trim()}”`
+                        : ""}
                     </span>
                     <input
                       type="file"
@@ -838,12 +1087,102 @@ export default function AdminDashboard() {
 
                 {currentBanners.length === 0 && (
                   <p className="admin-banner-empty-hint">
-                    No banners for this section yet. Upload one or more images —
-                    they will slideshow automatically on the shop page.
+                    No banners for this section yet. Optionally set a Product ID
+                    above, then upload — shoppers who tap the banner open that
+                    product.
                   </p>
                 )}
               </div>
             )}
+          </section>
+
+          <section className="admin-promo-panel" aria-labelledby="admin-promo-title">
+            <div className="admin-banners-header">
+              <div>
+                <h2 id="admin-promo-title">Promo codes</h2>
+                <p>Create checkout discounts by percentage or fixed rupee amount.</p>
+              </div>
+              <button
+                type="button"
+                className="admin-btn admin-btn-secondary admin-btn-sm"
+                onClick={loadPromoCodes}
+                disabled={promosLoading || promoSaving}
+              >
+                <i className="fas fa-rotate" aria-hidden="true"></i>
+                Refresh
+              </button>
+            </div>
+
+            <form className="admin-promo-form" onSubmit={handlePromoSave}>
+              <label>
+                Promo code
+                <input
+                  value={promoForm.code}
+                  onChange={(e) => setPromoForm((prev) => ({ ...prev, code: e.target.value.toUpperCase() }))}
+                  placeholder="INDIAOFF"
+                  maxLength="30"
+                  required
+                />
+              </label>
+              <label>
+                Discount type
+                <select
+                  value={promoForm.discountType}
+                  onChange={(e) => setPromoForm((prev) => ({ ...prev, discountType: e.target.value }))}
+                >
+                  <option value="percent">Percentage (%)</option>
+                  <option value="amount">Fixed amount (₹)</option>
+                </select>
+              </label>
+              <label>
+                {promoForm.discountType === "percent" ? "Discount (%)" : "Discount (₹)"}
+                <input
+                  type="number"
+                  min="0.01"
+                  max={promoForm.discountType === "percent" ? "100" : undefined}
+                  step="0.01"
+                  value={promoForm.discountValue}
+                  onChange={(e) => setPromoForm((prev) => ({ ...prev, discountValue: e.target.value }))}
+                  placeholder={promoForm.discountType === "percent" ? "12" : "100"}
+                  required
+                />
+              </label>
+              <label>
+                Expiry date
+                <input
+                  type="date"
+                  value={promoForm.expiresAt}
+                  onChange={(e) => setPromoForm((prev) => ({ ...prev, expiresAt: e.target.value }))}
+                  required
+                />
+              </label>
+              <button type="submit" className="admin-btn" disabled={promoSaving}>
+                {promoSaving ? "Saving…" : "Add promo code"}
+              </button>
+            </form>
+
+            {promoError && <p className="admin-promo-error" role="alert">{promoError}</p>}
+            <div className="admin-table-wrap">
+              {promosLoading ? (
+                <div className="admin-loading"><p>Loading promo codes…</p></div>
+              ) : promoCodes.length === 0 ? (
+                <div className="admin-empty"><p>No promo codes created yet.</p></div>
+              ) : (
+                <table className="admin-table admin-promo-table">
+                  <thead><tr><th>Code</th><th>Discount</th><th>Expires</th><th>Actions</th></tr></thead>
+                  <tbody>
+                    {promoCodes.map((promo) => (
+                      <tr key={promo.code}>
+                        <td><strong>{promo.code}</strong></td>
+                        <td>{promo.discountType === "percent" ? `${promo.discountValue}% off` : `${formatPrice(promo.discountValue)} off`}</td>
+                        <td>{new Date(promo.expiresAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</td>
+                        <td><button type="button" className="admin-btn admin-btn-danger admin-btn-sm" onClick={() => handlePromoDelete(promo)}><i className="fas fa-trash" aria-hidden="true"></i>Delete</button></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
           </section>
 
           <div className="admin-section-divider">
@@ -932,6 +1271,15 @@ export default function AdminDashboard() {
                           )}
                           <div>
                             <div className="admin-product-name">{p.name}</div>
+                            <button
+                              type="button"
+                              className="admin-btn admin-btn-secondary admin-btn-sm"
+                              onClick={() => copyText(p.id)}
+                              title="Copy product ID for a banner link"
+                            >
+                              ID: {p.id}{" "}
+                              <i className="fas fa-copy" aria-hidden="true"></i>
+                            </button>
                             <div className="admin-product-meta">
                               {p.category} · {p.gender}
                               {p.badge ? ` · ${p.badge}` : ""}
@@ -1088,6 +1436,21 @@ export default function AdminDashboard() {
                     <option value="unisex">Unisex</option>
                     <option value="accessories">Accessories</option>
                   </select>
+                </div>
+
+                <div className="admin-field full">
+                  <label htmlFor="p-group-name">Collection group (optional)</label>
+                  <input
+                    id="p-group-name"
+                    value={form.groupName}
+                    onChange={(e) => setField("groupName", e.target.value)}
+                    placeholder="e.g. #34 or July collection"
+                    maxLength="40"
+                  />
+                  <span className="admin-field-hint">
+                    Products with the same group are suggested together on their
+                    product pages.
+                  </span>
                 </div>
 
                 <div className="admin-field">

@@ -597,6 +597,24 @@
   margin-bottom: 16px;
 }
 
+.ck-promo {
+  margin: 18px 0;
+  padding: 14px;
+  border: 1px dashed #cfcfcf;
+  border-radius: 12px;
+  background: #fafafa;
+}
+
+.ck-promo > label { display: block; margin-bottom: 8px; font-size: 0.82rem; font-weight: 700; }
+.ck-promo-row { display: flex; gap: 8px; }
+.ck-promo-row input { min-width: 0; flex: 1; padding: 10px 12px; border: 1px solid var(--color-grey); border-radius: 9px; font: inherit; text-transform: uppercase; }
+.ck-promo-row button { border: 0; border-radius: 9px; padding: 0 14px; background: var(--color-black); color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+.ck-promo-row button:disabled { opacity: 0.55; cursor: not-allowed; }
+.ck-promo-success, .ck-promo-error { margin: 9px 0 0; font-size: 0.8rem; }
+.ck-promo-success { color: #15803d; }
+.ck-promo-error { color: #c62828; }
+.ck-promo-success button { margin-left: 6px; padding: 0; border: 0; background: none; color: inherit; font: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; }
+
 .ck-summary-row {
   display: flex;
   justify-content: space-between;
