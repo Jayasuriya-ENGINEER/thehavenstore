@@ -165,7 +165,7 @@ export function mergeOrders(remote = [], local = [], userId = null) {
   );
 }
 
-export function calcOrderTotals(items) {
+export function calcOrderTotals(items, promoDiscount = 0) {
   const subtotal = items.reduce(
     (sum, i) => sum + (Number(i.price) || 0) * (Number(i.qty) || 0),
     0,
@@ -178,8 +178,12 @@ export function calcOrderTotals(items) {
   );
   const discount = Math.max(0, mrpTotal - subtotal);
   const shipping = calcShippingFromItems(items, subtotal);
-  const total = subtotal + shipping;
-  return { subtotal, mrpTotal, discount, shipping, total };
+  const safePromoDiscount = Math.min(
+    subtotal,
+    Math.max(0, Number(promoDiscount) || 0),
+  );
+  const total = Math.max(0, subtotal - safePromoDiscount) + shipping;
+  return { subtotal, mrpTotal, discount, promoDiscount: safePromoDiscount, shipping, total };
 }
 
 /** Human-readable variant labels for cart / order lines. */
@@ -225,6 +229,8 @@ export async function placeOrder({
   razorpayPaymentId = null,
   razorpaySignature = null,
   paymentStatus = null,
+  promoCode = null,
+  promoDiscount = 0,
 }) {
   if (!items.length) throw new Error("Your cart is empty.");
   const shippingAddress = normalizeAddress(address);
@@ -246,14 +252,14 @@ export async function placeOrder({
     throw new Error("Enter a valid 6-digit PIN code.");
   }
 
-  const method = paymentMethod === "razorpay" ? "razorpay" : "cod";
+  const method = paymentMethod === "razorpay" ? "razorpay" : paymentMethod === "promo" ? "promo" : "cod";
   if (method === "razorpay") {
     if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
       throw new Error("Payment details missing. Please complete Razorpay checkout.");
     }
   }
 
-  const totals = calcOrderTotals(items);
+  const totals = calcOrderTotals(items, promoDiscount);
   const orderItems = items.map((i) => ({
     productId: i.productId,
     name: i.name,
@@ -295,6 +301,7 @@ export async function placeOrder({
       email: shippingAddress.email,
     },
     ...totals,
+    promoCode: promoCode ? String(promoCode).trim().toUpperCase() : null,
     currency: "INR",
     paymentMethod: method, // "cod" | "razorpay"
     paymentStatus: resolvedPaymentStatus,

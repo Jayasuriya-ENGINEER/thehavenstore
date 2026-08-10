@@ -19,6 +19,11 @@ import {
   placeOrder,
 } from "../services/orders";
 import { payWithRazorpay } from "../services/razorpay";
+import {
+  calculatePromoDiscount,
+  fetchPromoCode,
+  normalizePromoCode,
+} from "../services/promoCodes";
 import "./Checkout.css";
 
 export default function Checkout() {
@@ -42,9 +47,16 @@ export default function Checkout() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [loadingAddresses, setLoadingAddresses] = useState(false);
+  const [promoInput, setPromoInput] = useState("");
+  const [appliedPromo, setAppliedPromo] = useState(null);
+  const [promoMessage, setPromoMessage] = useState("");
+  const [promoError, setPromoError] = useState("");
+  const [applyingPromo, setApplyingPromo] = useState(false);
 
   const shipping = calcShippingFromItems(items, subtotal);
-  const total = subtotal + shipping;
+  const promoDiscount = calculatePromoDiscount(subtotal, appliedPromo);
+  const discountedSubtotal = Math.max(0, subtotal - promoDiscount);
+  const total = discountedSubtotal + shipping;
   const defaultItems = items.filter(
     (i) =>
       i.deliveryCharge === undefined ||
@@ -142,6 +154,49 @@ export default function Checkout() {
     setErrors({});
   };
 
+  const handleApplyPromo = async () => {
+    if (!currentUser?.uid) {
+      setPromoError("Please sign in to apply a promo code.");
+      return;
+    }
+    const code = normalizePromoCode(promoInput);
+    if (!code) {
+      setPromoError("Enter a promo code.");
+      return;
+    }
+    setApplyingPromo(true);
+    setPromoError("");
+    setPromoMessage("");
+    try {
+      const promo = await fetchPromoCode(code);
+      if (!promo) {
+        setAppliedPromo(null);
+        setPromoError("That promo code is invalid or has expired.");
+        return;
+      }
+      const amount = calculatePromoDiscount(subtotal, promo);
+      if (amount <= 0) {
+        setPromoError("This promo code cannot be applied to the current bag.");
+        return;
+      }
+      setAppliedPromo(promo);
+      setPromoInput(promo.code);
+      setPromoMessage(`${promo.code} applied — you save ${formatPrice(amount)}.`);
+    } catch (err) {
+      console.error(err);
+      setPromoError("Could not validate the promo code. Please try again.");
+    } finally {
+      setApplyingPromo(false);
+    }
+  };
+
+  const removePromo = () => {
+    setAppliedPromo(null);
+    setPromoInput("");
+    setPromoMessage("");
+    setPromoError("");
+  };
+
   const activeAddress = useMemo(() => {
     if (usingSaved) {
       const found = savedAddresses.find((a) => a.id === selectedAddressId);
@@ -187,6 +242,23 @@ export default function Checkout() {
       return;
     }
 
+    let promoForOrder = null;
+    if (appliedPromo) {
+      try {
+        promoForOrder = await fetchPromoCode(appliedPromo.code);
+      } catch {
+        setSubmitError("Could not recheck the promo code. Please try again.");
+        return;
+      }
+      if (!promoForOrder) {
+        removePromo();
+        setSubmitError("This promo code has expired. Please apply another code.");
+        return;
+      }
+    }
+
+    const checkoutPromoDiscount = calculatePromoDiscount(subtotal, promoForOrder);
+    const checkoutTotal = Math.max(0, subtotal - checkoutPromoDiscount) + shipping;
     setSubmitting(true);
     setSubmitError("");
 
@@ -227,25 +299,28 @@ export default function Checkout() {
         }
       }
 
-      const paymentFields = await payWithRazorpay({
-        amountRupees: total,
-        receipt: `ord_${Date.now()}`.slice(0, 40),
-        customer: {
-          fullName: shippingAddress.fullName,
-          email: shippingAddress.email,
-          phone: shippingAddress.phone,
-        },
-        notes: {
-          itemCount: String(itemCount),
-        },
-      });
+      const paymentFields =
+        checkoutTotal > 0
+          ? await payWithRazorpay({
+              amountRupees: checkoutTotal,
+              receipt: `ord_${Date.now()}`.slice(0, 40),
+              customer: {
+                fullName: shippingAddress.fullName,
+                email: shippingAddress.email,
+                phone: shippingAddress.phone,
+              },
+              notes: { itemCount: String(itemCount), promoCode: promoForOrder?.code || "" },
+            })
+          : { paymentStatus: "paid" };
 
       const order = await placeOrder({
         userId: currentUser?.uid || null,
         items,
         address: shippingAddress,
-        paymentMethod: "razorpay",
+        paymentMethod: checkoutTotal > 0 ? "razorpay" : "promo",
         notes,
+        promoCode: promoForOrder?.code || null,
+        promoDiscount: checkoutPromoDiscount,
         ...paymentFields,
       });
 
@@ -699,6 +774,28 @@ export default function Checkout() {
                     </div>
                   )}
 
+                  <div className="ck-promo">
+                    <label htmlFor="ck-promo-code">Promo code</label>
+                    <div className="ck-promo-row">
+                      <input
+                        id="ck-promo-code"
+                        value={promoInput}
+                        onChange={(e) => {
+                          setPromoInput(e.target.value.toUpperCase());
+                          setPromoError("");
+                          setPromoMessage("");
+                        }}
+                        placeholder="e.g. INDIAOFF"
+                        disabled={applyingPromo || submitting}
+                      />
+                      <button type="button" onClick={handleApplyPromo} disabled={applyingPromo || submitting}>
+                        {applyingPromo ? "Checking…" : "Apply"}
+                      </button>
+                    </div>
+                    {promoMessage && <p className="ck-promo-success">{promoMessage} <button type="button" onClick={removePromo}>Remove</button></p>}
+                    {promoError && <p className="ck-promo-error">{promoError}</p>}
+                  </div>
+
                   <div className="ck-summary-rows">
                     <div className="ck-summary-row">
                       <span>MRP</span>
@@ -714,6 +811,12 @@ export default function Checkout() {
                       <span>Subtotal</span>
                       <span>{formatPrice(subtotal)}</span>
                     </div>
+                    {promoDiscount > 0 && (
+                      <div className="ck-summary-row discount">
+                        <span>Promo ({appliedPromo.code})</span>
+                        <span>−{formatPrice(promoDiscount)}</span>
+                      </div>
+                    )}
                     <div className="ck-summary-row">
                       <span>Delivery</span>
                       <span>
@@ -738,7 +841,7 @@ export default function Checkout() {
                           Processing payment…
                         </>
                       ) : (
-                        <>Pay · {formatPrice(total)}</>
+                        <>{total === 0 ? "Place free order" : `Pay · ${formatPrice(total)}`}</>
                       )}
                     </button>
                     <Link to="/cart" className="ck-btn ck-btn-secondary">

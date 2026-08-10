@@ -30,6 +30,31 @@ function slugify(text) {
     .slice(0, 60);
 }
 
+/**
+ * Collection / drop tag shared by related products, e.g. "#7" or "july-drop".
+ * Empty string means no group (no group-based suggestions).
+ */
+export function normalizeGroupName(value) {
+  return String(value || "")
+    .trim()
+    .replace(/\s+/g, " ")
+    .slice(0, 40);
+}
+
+/** Compare group names case-insensitively (supports "#7" / "#7 "). */
+export function sameGroupName(a, b) {
+  const left = normalizeGroupName(a).toLowerCase();
+  const right = normalizeGroupName(b).toLowerCase();
+  return Boolean(left && right && left === right);
+}
+
+/** Short unique suffix for product document ids. */
+function uniqueIdSuffix() {
+  return `${Date.now().toString(36).slice(-5)}${Math.random()
+    .toString(36)
+    .slice(2, 5)}`;
+}
+
 /** Normalize admin-defined option groups, e.g. Flavour → Sandal, Divine */
 export function normalizeCustomOptions(raw) {
   if (!Array.isArray(raw)) return [];
@@ -63,6 +88,8 @@ export function normalizeProduct(id, data = {}) {
     name: data.name || "",
     category: data.category || "T-Shirts",
     gender: data.gender || "men",
+    // Shared collection tag — used for "suggested products" on product pages
+    groupName: normalizeGroupName(data.groupName),
     price: Number(data.price) || 0,
     originalPrice: Number(data.originalPrice) || Number(data.price) || 0,
     stock: Number.isFinite(stock) ? stock : 0,
@@ -212,6 +239,7 @@ function buildPayload(form, { isNew = false } = {}) {
     name: form.name.trim(),
     category: form.category.trim() || "T-Shirts",
     gender: form.gender || "men",
+    groupName: normalizeGroupName(form.groupName),
     price: Number(form.price) || 0,
     originalPrice: Number(form.originalPrice) || Number(form.price) || 0,
     stock: safeStock,
@@ -236,20 +264,38 @@ function buildPayload(form, { isNew = false } = {}) {
   };
 }
 
+/**
+ * Create a product with a unique document id (used in URLs and banner links).
+ * Prefer optional custom slug; otherwise slug from name; always resolve collisions.
+ */
 export async function createProduct(form) {
-  const baseSlug = slugify(form.name) || `product-${Date.now()}`;
-  const id = form.id?.trim() ? slugify(form.id) : baseSlug;
   const payload = buildPayload(form, { isNew: true });
+  const preferred =
+    slugify(form.id?.trim()) ||
+    slugify(form.name) ||
+    `product-${uniqueIdSuffix()}`;
 
-  // Prefer readable id; fall back to auto-id if conflict
-  const existing = await getDoc(doc(db, PRODUCTS, id));
+  let id = preferred;
+  let existing = await getDoc(doc(db, PRODUCTS, id));
   if (existing.exists()) {
+    id = `${preferred}-${uniqueIdSuffix()}`;
+    existing = await getDoc(doc(db, PRODUCTS, id));
+  }
+
+  if (existing.exists()) {
+    // Extremely rare race — let Firestore assign an auto id
     const refDoc = await addDoc(collection(db, PRODUCTS), payload);
-    return normalizeProduct(refDoc.id, { ...payload, createdAt: new Date().toISOString() });
+    return normalizeProduct(refDoc.id, {
+      ...payload,
+      createdAt: new Date().toISOString(),
+    });
   }
 
   await setDoc(doc(db, PRODUCTS, id), payload);
-  return normalizeProduct(id, { ...payload, createdAt: new Date().toISOString() });
+  return normalizeProduct(id, {
+    ...payload,
+    createdAt: new Date().toISOString(),
+  });
 }
 
 export async function updateProduct(id, form) {

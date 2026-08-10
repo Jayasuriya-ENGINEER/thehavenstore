@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import ShopProductImage from "../components/ShopProductImage";
 import { useCart } from "../context/CartContext";
 import {
   getMensProductById,
@@ -9,7 +10,11 @@ import {
   formatPrice,
   getDiscountPercent,
 } from "../data/mensProducts";
-import { fetchProductById, fetchProducts } from "../services/products";
+import {
+  fetchProductById,
+  fetchProducts,
+  sameGroupName,
+} from "../services/products";
 import {
   sectionFromGender,
   sectionFromPathname,
@@ -100,17 +105,37 @@ export default function ProductDetail() {
             pool = mensProducts;
           }
 
+          // A collection group may span sections (for example, a July drop
+          // containing apparel and accessories), so look across the catalog.
+          let groupPool = pool;
+          if (found.groupName) {
+            try {
+              groupPool = await fetchProducts({ activeOnly: true });
+            } catch {
+              // Keep section results as a safe fallback if the wider query fails.
+            }
+          }
+          const sameGroup = groupPool.filter(
+            (p) =>
+              p.id !== found.id && sameGroupName(p.groupName, found.groupName),
+          );
           const sameCategory = pool.filter(
             (p) => p.id !== found.id && p.category === found.category,
           );
           const others = pool.filter(
-            (p) => p.id !== found.id && p.category !== found.category,
+            (p) =>
+              p.id !== found.id &&
+              !sameGroupName(p.groupName, found.groupName) &&
+              p.category !== found.category,
           );
           setRelated(
-            (sameCategory.length >= 4
-              ? sameCategory
-              : [...sameCategory, ...others]
-            ).slice(0, 4),
+            [
+              ...sameGroup,
+              ...sameCategory.filter(
+                (p) => !sameGroup.some((groupProduct) => groupProduct.id === p.id),
+              ),
+              ...others,
+            ].slice(0, 4),
           );
         } else {
           setRelated([]);
@@ -259,8 +284,6 @@ export default function ProductDetail() {
   }
 
   const images = product.images?.length ? product.images : [];
-  const fullStars = Math.floor(product.rating || 0);
-  const hasHalf = (product.rating || 0) - fullStars >= 0.3;
   const maxQty = Math.min(10, product.stock > 0 ? product.stock : 10);
 
   return (
@@ -519,7 +542,11 @@ export default function ProductDetail() {
         {related.length > 0 && (
           <section className="pd-related">
             <div className="container">
-              <h2>You may also like</h2>
+              <h2>
+                {product.groupName
+                  ? `More from ${product.groupName}`
+                  : "You may also like"}
+              </h2>
               <div className="shop-grid">
                 {related.map((p) => {
                   const off = getDiscountPercent(p.price, p.originalPrice);
@@ -529,14 +556,12 @@ export default function ProductDetail() {
                       to={`${section.path}/${p.id}`}
                       className="shop-card"
                     >
-                      <div className="shop-card-image">
-                        {p.badge && (
-                          <span className="shop-card-badge">{p.badge}</span>
-                        )}
-                        {p.images?.[0] && (
-                          <img src={p.images[0]} alt={p.name} />
-                        )}
-                      </div>
+                      <ShopProductImage
+                        images={p.images}
+                        name={p.name}
+                        badge={p.badge}
+                        discount={off}
+                      />
                       <div className="shop-card-body">
                         <span className="shop-card-category">{p.category}</span>
                         <h3>{p.name}</h3>

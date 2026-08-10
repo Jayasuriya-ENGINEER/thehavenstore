@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { fetchSectionBanners } from "../services/banners";
+import { fetchProductById } from "../services/products";
+import { sectionFromGender, SHOP_SECTIONS } from "../pages/shopSections";
 import "./SectionBannerSlideshow.css";
 
 const AUTO_MS = 4500;
@@ -7,8 +10,10 @@ const AUTO_MS = 4500;
 /**
  * Auto-scrolling banner slideshow for Men / Women / Accessories.
  * Loops continuously when more than one image is set in admin.
+ * If a slide has productId, clicking it opens that product page.
  */
 export default function SectionBannerSlideshow({ section }) {
+  const navigate = useNavigate();
   const [images, setImages] = useState([]);
   const [index, setIndex] = useState(0);
   const [loaded, setLoaded] = useState(false);
@@ -51,6 +56,26 @@ export default function SectionBannerSlideshow({ section }) {
     return () => clearInterval(id);
   }, [count, paused]);
 
+  const handleBannerClick = async (img) => {
+    const productId = (img?.productId || "").trim();
+    if (!productId) return;
+
+    // Prefer the product's own section so unisex / cross-section links land correctly
+    try {
+      const product = await fetchProductById(productId);
+      if (product) {
+        const target = sectionFromGender(product.gender);
+        navigate(`${target.path}/${product.id}`);
+        return;
+      }
+    } catch {
+      // fall through to section path
+    }
+
+    const fallback = SHOP_SECTIONS[section] || SHOP_SECTIONS.men;
+    navigate(`${fallback.path}/${productId}`);
+  };
+
   if (!loaded || count === 0) return null;
 
   return (
@@ -66,20 +91,42 @@ export default function SectionBannerSlideshow({ section }) {
       }}
     >
       <div className="section-banner-track">
-        {images.map((img, i) => (
-          <div
-            key={img.id || i}
-            className={`section-banner-slide${i === index ? " active" : ""}`}
-            aria-hidden={i !== index}
-          >
-            <img
-              src={img.url}
-              alt=""
-              loading={i === 0 ? "eager" : "lazy"}
-              draggable={false}
-            />
-          </div>
-        ))}
+        {images.map((img, i) => {
+          const linked = Boolean(img.productId);
+          return (
+            <div
+              key={img.id || i}
+              className={`section-banner-slide${i === index ? " active" : ""}${
+                linked ? " is-clickable" : ""
+              }`}
+              aria-hidden={i !== index}
+              role={linked ? "link" : undefined}
+              tabIndex={linked && i === index ? 0 : undefined}
+              onClick={() => {
+                if (linked && i === index) handleBannerClick(img);
+              }}
+              onKeyDown={(e) => {
+                if (!linked || i !== index) return;
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  handleBannerClick(img);
+                }
+              }}
+              aria-label={
+                linked
+                  ? `Open product ${img.productId}`
+                  : undefined
+              }
+            >
+              <img
+                src={img.url}
+                alt=""
+                loading={i === 0 ? "eager" : "lazy"}
+                draggable={false}
+              />
+            </div>
+          );
+        })}
       </div>
 
       {count > 1 && (

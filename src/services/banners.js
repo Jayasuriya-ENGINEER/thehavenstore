@@ -28,9 +28,18 @@ export function isValidBannerSection(section) {
   return BANNER_SECTIONS.some((s) => s.key === section);
 }
 
+/** Clean product id used on banner click-through (document id / URL slug). */
+export function normalizeBannerProductId(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9-_]/g, "")
+    .slice(0, 80);
+}
+
 /**
  * Normalize banner document from Firestore.
- * @returns {{ section: string, images: Array<{id: string, url: string, path: string}>, updatedAt: * }}
+ * @returns {{ section: string, images: Array<{id: string, url: string, path: string, productId: string}>, updatedAt: * }}
  */
 export function normalizeBanners(section, data = {}) {
   const images = Array.isArray(data.images)
@@ -40,6 +49,8 @@ export function normalizeBanners(section, data = {}) {
           id: img.id || `banner-${index}`,
           url: img.url,
           path: img.path || "",
+          // Optional: when set, storefront click opens this product
+          productId: normalizeBannerProductId(img.productId),
         }))
     : [];
 
@@ -185,6 +196,7 @@ async function deleteStoragePath(path) {
 /**
  * Save the full image list for a section (order preserved).
  * Does not delete storage files — call removeBannerImage for that.
+ * Each image may include productId for click-through to a product page.
  */
 export async function saveSectionBanners(section, images) {
   if (!isValidBannerSection(section)) {
@@ -193,11 +205,17 @@ export async function saveSectionBanners(section, images) {
 
   const clean = (Array.isArray(images) ? images : [])
     .filter((img) => img && img.url)
-    .map((img, index) => ({
-      id: img.id || `banner-${index}`,
-      url: img.url,
-      path: img.path || "",
-    }));
+    .map((img, index) => {
+      const productId = normalizeBannerProductId(img.productId);
+      const entry = {
+        id: img.id || `banner-${index}`,
+        url: img.url,
+        path: img.path || "",
+      };
+      // Only store when set — keeps older banner docs tidy
+      if (productId) entry.productId = productId;
+      return entry;
+    });
 
   await setDoc(
     doc(db, COLLECTION, section),
@@ -209,6 +227,28 @@ export async function saveSectionBanners(section, images) {
   );
 
   return normalizeBanners(section, { images: clean });
+}
+
+/**
+ * Set or clear the product link on one banner slide.
+ */
+export async function updateBannerProductLink(section, imageId, productId) {
+  if (!isValidBannerSection(section) || !imageId) {
+    throw new Error("Missing section or banner id");
+  }
+
+  const current = await fetchSectionBanners(section);
+  const next = current.images.map((img) =>
+    img.id === imageId
+      ? { ...img, productId: normalizeBannerProductId(productId) }
+      : img,
+  );
+
+  if (!current.images.some((img) => img.id === imageId)) {
+    throw new Error("Banner not found");
+  }
+
+  return saveSectionBanners(section, next);
 }
 
 /**
@@ -233,8 +273,10 @@ export async function removeBannerImage(section, imageId) {
 
 /**
  * Append newly uploaded images to a section and persist.
+ * @param {string} [productId] — optional product document id for click-through
+ *   (applied to every file in this upload batch).
  */
-export async function addBannerImages(section, files) {
+export async function addBannerImages(section, files, productId = "") {
   const fileList = Array.from(files || []).filter((f) =>
     f.type?.startsWith("image/"),
   );
@@ -242,9 +284,12 @@ export async function addBannerImages(section, files) {
     throw new Error("Please choose image files only.");
   }
 
+  const linkId = normalizeBannerProductId(productId);
   const uploaded = [];
   for (const file of fileList) {
-    uploaded.push(await uploadBannerImage(file, section));
+    const item = await uploadBannerImage(file, section);
+    if (linkId) item.productId = linkId;
+    uploaded.push(item);
   }
 
   const current = await fetchSectionBanners(section);
