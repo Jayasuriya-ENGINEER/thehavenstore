@@ -12,6 +12,10 @@
 
 - Public product requests filter `active == true`, which is permitted by the product read rule.
 - Admin product requests may list all products.
+- Storefront sections (men / women / accessories) load active products with an
+  `active == true` query, then filter by section/gender in the client. Do not use
+  an unfiltered `getDocs(products)` for guests — security rules reject it, and
+  that previously made accessories appear only for the admin account.
 - An authenticated user can query only their own orders with `where("userId", "==", uid)`.
 
 ## Security review / attack checks

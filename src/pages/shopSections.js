@@ -31,7 +31,7 @@ export const SHOP_SECTIONS = {
     title: "Accessories",
     description:
       "Bags, caps, and finishing pieces — small details that complete the look.",
-    emptyHint: "WILL ADD PRODUCTS SHORTLY.",
+    emptyHint: "Add products with section Accessories in the admin panel.",
   },
 };
 

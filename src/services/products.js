@@ -108,48 +108,56 @@ function sortByCreatedDesc(list) {
   });
 }
 
+/**
+ * Load products for storefront or admin.
+ *
+ * Security rules only allow public list when every matched doc is active
+ * (or the user is admin). So public queries MUST include active == true.
+ *
+ * Accessories previously queried gender + active + orderBy (needs a composite
+ * index). When that failed, the fallback did an unfiltered collection read —
+ * which succeeds for admin but fails for guests. Result: accessories showed
+ * only while logged in as admin. We now always use active-safe queries and
+ * filter section/gender client-side (same path as men/women + unisex).
+ */
 export async function fetchProducts({ gender, activeOnly = true } = {}) {
   const col = collection(db, PRODUCTS);
-  const includeUnisex = gender === "men" || gender === "women";
+
+  const applyFilters = (list) => {
+    let next = list;
+    if (gender) {
+      next = next.filter((p) => productMatchesSection(p.gender, gender));
+    }
+    if (activeOnly) {
+      next = next.filter((p) => p.active);
+    }
+    return sortByCreatedDesc(next);
+  };
 
   try {
-    // Unisex must appear on both men & women — fetch active (or all) then filter
-    if (includeUnisex) {
-      let q = activeOnly
-        ? query(col, where("active", "==", true), orderBy("createdAt", "desc"))
-        : query(col, orderBy("createdAt", "desc"));
-      const snap = await getDocs(q);
-      let list = snap.docs.map((d) => normalizeProduct(d.id, d.data()));
-      list = list.filter((p) => productMatchesSection(p.gender, gender));
-      return sortByCreatedDesc(list);
-    }
-
-    let q = col;
-    if (gender && activeOnly) {
-      q = query(
-        col,
-        where("gender", "==", gender),
-        where("active", "==", true),
-        orderBy("createdAt", "desc"),
-      );
-    } else if (gender) {
-      q = query(col, where("gender", "==", gender), orderBy("createdAt", "desc"));
-    } else if (activeOnly) {
-      q = query(col, where("active", "==", true), orderBy("createdAt", "desc"));
-    } else {
-      q = query(col, orderBy("createdAt", "desc"));
-    }
+    // Public: constrain by active so list queries match firestore.rules.
+    // Admin (activeOnly=false): may list all products.
+    const q = activeOnly
+      ? query(col, where("active", "==", true), orderBy("createdAt", "desc"))
+      : query(col, orderBy("createdAt", "desc"));
 
     const snap = await getDocs(q);
-    return snap.docs.map((d) => normalizeProduct(d.id, d.data()));
+    const list = snap.docs.map((d) => normalizeProduct(d.id, d.data()));
+    return applyFilters(list);
   } catch (err) {
-    // Fallback if composite index missing — fetch all and filter client-side
+    // Missing index / orderBy issues — retry without orderBy, still rule-safe.
     console.warn("Products query fallback:", err?.message);
-    const snap = await getDocs(collection(db, PRODUCTS));
-    let list = snap.docs.map((d) => normalizeProduct(d.id, d.data()));
-    if (gender) list = list.filter((p) => productMatchesSection(p.gender, gender));
-    if (activeOnly) list = list.filter((p) => p.active);
-    return sortByCreatedDesc(list);
+    try {
+      const q = activeOnly
+        ? query(col, where("active", "==", true))
+        : col;
+      const snap = await getDocs(q);
+      const list = snap.docs.map((d) => normalizeProduct(d.id, d.data()));
+      return applyFilters(list);
+    } catch (fallbackErr) {
+      console.error("Products fetch failed:", fallbackErr?.message);
+      throw fallbackErr;
+    }
   }
 }
 
