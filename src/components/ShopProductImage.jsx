@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 
-const HOVER_INTERVAL_MS = 2400;
+/** Time each image stays fully visible before crossfading to the next. */
+const HOVER_INTERVAL_MS = 2800;
+/** Delay before auto-cycling starts on touch devices once the card is in view. */
 const MOBILE_VIEW_DELAY_MS = 12000;
 
 /**
  * Product-card image preview. On devices with a hover-capable pointer it
- * cycles through the product images while hovered. On touch devices it starts
- * cycling only after the card remains in view for 12 seconds.
+ * crossfades through the product images while hovered. On touch devices it
+ * starts cycling only after the card remains in view for 12 seconds.
  */
 export default function ShopProductImage({
   images = [],
@@ -24,7 +26,6 @@ export default function ShopProductImage({
 
   const imageCount = images.length;
   const hasExtraImages = imageCount > 1;
-  const previousImageIndex = (imageIndex - 1 + imageCount) % imageCount;
 
   useEffect(() => {
     const media = window.matchMedia("(hover: hover) and (pointer: fine)");
@@ -86,13 +87,15 @@ export default function ShopProductImage({
 
   const startHoverPreview = () => {
     if (!canHover || !hasExtraImages) return;
-    setImageIndex(1);
     setIsHovered(true);
+    // Crossfade to the second image on hover (ecommerce-style preview).
+    setImageIndex(1);
   };
 
   const stopHoverPreview = () => {
     if (!canHover || !hasExtraImages) return;
     setIsHovered(false);
+    // Crossfade back to the primary image.
     setImageIndex(0);
   };
 
@@ -107,25 +110,20 @@ export default function ShopProductImage({
       {!badge && discount > 0 && (
         <span className="shop-card-badge sale">{discount}% OFF</span>
       )}
-      {images[imageIndex] ? (
-        images.map((image, index) => {
-          const position =
-            index === imageIndex
-              ? "is-active"
-              : index === previousImageIndex
-                ? "is-previous"
-                : "";
-
-          return (
-            <img
-              key={`${image}-${index}`}
-              className={`shop-card-preview-image ${position}`}
-              src={image}
-              alt={index === imageIndex ? name : ""}
-              aria-hidden={index !== imageIndex}
-            />
-          );
-        })
+      {images[0] ? (
+        images.map((image, index) => (
+          <img
+            key={`${image}-${index}`}
+            className={`shop-card-preview-image${
+              index === imageIndex ? " is-active" : ""
+            }`}
+            src={image}
+            alt={index === imageIndex ? name : ""}
+            aria-hidden={index !== imageIndex}
+            loading={index === 0 ? "eager" : "lazy"}
+            decoding="async"
+          />
+        ))
       ) : (
         <div className="shop-card-image-placeholder" />
       )}
