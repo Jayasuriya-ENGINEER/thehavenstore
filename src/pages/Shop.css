@@ -194,21 +194,19 @@
 .shop-card-preview-image {
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   opacity: 0;
-  transform: translateX(100%);
-  transition:
-    transform 0.9s cubic-bezier(0.22, 0.61, 0.36, 1),
-    opacity 0.9s ease;
+  z-index: 0;
+  pointer-events: none;
+  transition: opacity 0.75s ease-in-out;
+  will-change: opacity;
 }
 
 .shop-card-preview-image.is-active {
   opacity: 1;
-  transform: translateX(0);
-}
-
-.shop-card-preview-image.is-previous {
-  opacity: 0;
-  transform: translateX(-100%);
+  z-index: 1;
 }
 
 .shop-card-image-placeholder {
@@ -233,7 +231,7 @@
   letter-spacing: 0.4px;
   text-transform: uppercase;
   border-radius: 50px;
-  z-index: 1;
+  z-index: 2;
 }
 
 .shop-card-badge.sale {
